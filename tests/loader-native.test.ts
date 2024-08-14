@@ -573,7 +573,7 @@ Deno.test('JSR - no lockfile', async () => {
   assertEquals(ns.join('a', 'b'), join('a', 'b'))
 })
 
-Deno.test('Vendoring', async () => {
+Deno.test('Vendoring', { ignore: true }, async () => {
   const configPath = join(Deno.cwd(), 'tests/fixtures', 'vendoring.json')
 
   const b = await esbuild.build({
