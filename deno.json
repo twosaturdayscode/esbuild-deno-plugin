@@ -12,16 +12,17 @@
     "@std/jsonc": "jsr:@std/jsonc@1.0.0",
     "@std/path": "jsr:@std/path@0.213"
   },
-  "publish": { "exclude": ["testdata/", "*_test.ts"] },
+  "publish": { "exclude": ["tests/"] },
   "fmt": {
     "semiColons": false,
     "singleQuote": true,
     "indentWidth": 2,
-    "exclude": [".vscode"]
+    "exclude": ["tests/fixtures/", "README.md"]
   },
+  "lint": { "exclude": ["tests/"] },
   "tasks": {
     "format": "deno fmt",
-    "main": "deno run --allow-run --allow-read --allow-write --allow-net mod.ts",
+    "lint": "deno lint",
     "test:native": "deno test -A tests/loader-native.test.ts",
     "test:portable": "deno test -A tests/loader-portable.test.ts"
   }
