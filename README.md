@@ -14,7 +14,7 @@ Deno modules resolution and loading for `esbuild`.
 - Support for `jsr:` specifiers
 - Support for import maps (including embedded into `deno.json`)
 - Native loader using Deno's global cache directory
-- Portable loader that words in environments with limited permissions
+- Portable loader that works in environments with limited permissions
 
 ### Added
 
