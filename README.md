@@ -1,7 +1,7 @@
 # esbuild-deno-plugin
 
-> [!IMPORTANT] This is a fork and rewrite of the original work of
-> [esbuild_deno_loader](https://github.com/lucacasonato/esbuild_deno_loader)
+> [!IMPORTANT]
+> This is a fork and rewrite of the original work of [esbuild_deno_loader](https://github.com/lucacasonato/esbuild_deno_loader)
 
 Deno modules resolution and loading for `esbuild`.
 
@@ -84,8 +84,8 @@ you want to add your own loader plugins that handles specific file extensions or
 URL schemes, you should insert these plugins between the Deno resolver, and Deno
 loader.
 
-> [!NOTE] In most cases, the `denoResolverPlugin` should be the first plugin in
-> the plugin array.
+> [!NOTE]
+> In most cases, the `denoResolverPlugin` should be the first plugin in the plugin array.
 
 For more details read the "How it works" section.
 
