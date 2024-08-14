@@ -1,0 +1,15 @@
+{
+  "modules": {
+    "https://esm.sh/natural-compare-lite@1.4.0": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/v135/@types/natural-compare-lite@~1.4/index.d.ts"
+      }
+    },
+    "https://esm.sh/v135/@types/natural-compare-lite@~1.4/index.d.ts": {
+      "headers": {
+        "location": "https://esm.sh/v135/@types/natural-compare-lite@1.4.2/index.d.ts"
+      }
+    }
+  }
+}

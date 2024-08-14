@@ -1,0 +1,28 @@
+{
+  "name": "@duesabati/esbuild-deno-plugin",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@0.213",
+    "@std/encoding/base32": "jsr:@std/encoding@0.213/base32",
+    "@std/encoding": "jsr:@std/encoding@0.213",
+    "@std/fs": "jsr:@std/fs@0.213",
+    "@std/jsonc": "jsr:@std/jsonc@1.0.0",
+    "@std/path": "jsr:@std/path@0.213"
+  },
+  "publish": { "exclude": ["testdata/", "*_test.ts"] },
+  "fmt": {
+    "semiColons": false,
+    "singleQuote": true,
+    "indentWidth": 2,
+    "exclude": [".vscode"]
+  },
+  "tasks": {
+    "format": "deno fmt",
+    "main": "deno run --allow-run --allow-read --allow-write --allow-net mod.ts",
+    "test:native": "deno test -A tests/loader-native.test.ts",
+    "test:portable": "deno test -A tests/loader-portable.test.ts"
+  }
+}

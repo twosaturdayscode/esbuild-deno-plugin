@@ -1,0 +1,6 @@
+{
+  // there is a comment here!
+  "imports": {
+    "mod": "./mod.ts"
+  }
+}

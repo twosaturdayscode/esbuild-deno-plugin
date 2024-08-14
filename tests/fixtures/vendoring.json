@@ -1,0 +1,6 @@
+{
+  "vendor": true,
+  "imports": {
+    "mod": "./mod.ts"
+  }
+}
