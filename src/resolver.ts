@@ -153,12 +153,11 @@ export const denoResolver = (
           }
 
           const importUrl = toFileUrl(resolve(path, exports)).href
-
           map.addImport(name, importUrl)
 
           if (imports) {
             for (const [k, v] of Object.entries(imports)) {
-              map.addScope(importUrl, { [k]: v })
+              map.addScope(toFileUrl(path + '/').href, { [k]: v })
             }
           }
         }
