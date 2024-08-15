@@ -116,36 +116,32 @@ export class ImportMap {
     this.scopes = sortedScopes
   }
 
-  resolveModule(specifier: string, base: string): string {
+  resolveModule(specifier: string, referrer: string): string {
     if (this.isEmpty) {
-      return new URL(specifier, base).href
+      return new URL(specifier, referrer).href
     }
 
-    const resolvedSpecifier = resolveUrlLike(specifier, base)
+    const resolved = resolveUrlLike(specifier, referrer)
 
     /**
      * Check in the scopes
      */
     for (const [scope, scopedImports] of Object.entries(this.scopes)) {
-      if (scope === base || (scope.endsWith('/') && base.startsWith(scope))) {
-        const resolvedImport = resolveImportsMatch(
-          resolvedSpecifier,
-          scopedImports,
-        )
+      if (
+        scope === referrer ||
+        (scope.endsWith('/') && referrer.startsWith(scope))
+      ) {
+        const resolvedImport = resolveImportsMatch(resolved, scopedImports)
 
-        if (resolvedImport) {
-          return resolvedImport
-        }
+        if (resolvedImport) return resolvedImport
       }
     }
 
-    const resolvedImport = resolveImportsMatch(resolvedSpecifier, this.imports)
+    const resolvedImport = resolveImportsMatch(resolved, this.imports)
 
-    if (resolvedImport) {
-      return resolvedImport
-    }
+    if (resolvedImport) return resolvedImport
 
-    return resolvedSpecifier
+    return resolved
   }
 
   expand() {
