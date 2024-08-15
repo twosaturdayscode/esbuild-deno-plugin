@@ -621,7 +621,7 @@ describe('Portable loader suite', { ignore: ifWindows }, () => {
       plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
       bundle: true,
       platform: 'neutral',
-      entryPoints: ['tests/fixtures/workspace/main.ts'],
+      entryPoints: ['./tests/fixtures/workspace/main.ts'],
     })
 
     assertEquals(b.warnings, [])
