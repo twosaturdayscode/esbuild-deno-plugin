@@ -52,9 +52,26 @@ export class ImportMap {
     this.imports[specifier] = path
   }
 
-  private constructor(_imports: Imports, _scopes: Scopes = {}) {
-    this.imports = _imports
-    this.scopes = _scopes
+  addScope(scope: string, imports: Imports) {
+    if (!URL.canParse(scope)) {
+      throw new Error('Invalid scope. At key: ' + scope)
+    }
+
+    if (!isStringRecord(imports)) {
+      throw new Error('Invalid imports. At key: ' + scope)
+    }
+
+    for (const [k, v] of Object.entries(imports)) {
+      if (!isValidImportSpecifier(k)) {
+        throw new Error('Invalid import specifier. At key: ' + k)
+      }
+
+      if (!isValidImportValue(v)) {
+        throw new Error('Invalid import value. At key: ' + k)
+      }
+    }
+
+    this.scopes[scope] = { ...this.scopes[scope], ...imports }
   }
 
   resolveWith(base: string): void {
