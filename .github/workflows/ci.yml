@@ -58,5 +58,15 @@ jobs:
       id-token: write
 
     steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@main
+        with:
+          deno-version: v1.x
+
+      - run: deno --version
+
       - name: Publish (on tag)
         run: deno publish

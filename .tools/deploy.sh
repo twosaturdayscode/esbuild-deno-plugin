@@ -32,8 +32,8 @@ main() {
   echo "New tag: $new_tag"
 
   git tag -a "$new_tag" -m "Release $new_tag"
-  git push ${RMT} "$new_tag"
   git push ${RMT} main
+  git push ${RMT} "$new_tag"
 }
 
 main "$@"
