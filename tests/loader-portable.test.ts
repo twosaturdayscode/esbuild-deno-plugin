@@ -556,56 +556,56 @@ describe('Portable loader suite', { ignore: ifWindows }, () => {
     )
     assertEquals(ns.join('a', 'b'), join('a', 'b'))
   })
-})
 
-Deno.test('Workspace', async () => {
-  const configPath = join(Deno.cwd(), 'tests/fixtures', 'workspace/deno.json')
+  it('Workspace', async () => {
+    const configPath = join(Deno.cwd(), 'tests/fixtures', 'workspace/deno.json')
 
-  const b = await esbuild.build({
-    ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
-    bundle: true,
-    platform: 'neutral',
-    entryPoints: ['./tests/fixtures/workspace/main.ts'],
+    const b = await esbuild.build({
+      ...BASE_OPTIONS,
+      plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+      bundle: true,
+      platform: 'neutral',
+      entryPoints: ['./tests/fixtures/workspace/main.ts'],
+    })
+
+    assertEquals(b.warnings, [])
+    assertEquals(b.errors, [])
+    assertEquals(b.outputFiles.length, 1)
+
+    const output = b.outputFiles[0]
+
+    assertEquals(output.path, '<stdout>')
+    const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+    const { said } = await import(dataURL)
+
+    assertEquals(said, 'hello..hello')
   })
 
-  assertEquals(b.warnings, [])
-  assertEquals(b.errors, [])
-  assertEquals(b.outputFiles.length, 1)
+  it('Workspace with import maps', async () => {
+    const configPath = join(
+      Deno.cwd(),
+      'tests/fixtures',
+      'workspace-import-maps/deno.json',
+    )
 
-  const output = b.outputFiles[0]
+    const b = await esbuild.build({
+      ...BASE_OPTIONS,
+      plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+      bundle: true,
+      platform: 'neutral',
+      entryPoints: ['./tests/fixtures/workspace/main.ts'],
+    })
 
-  assertEquals(output.path, '<stdout>')
-  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
-  const { said } = await import(dataURL)
+    assertEquals(b.warnings, [])
+    assertEquals(b.errors, [])
+    assertEquals(b.outputFiles.length, 1)
 
-  assertEquals(said, 'hello..hello')
-})
+    const output = b.outputFiles[0]
 
-Deno.test('Workspace with import maps', async () => {
-  const configPath = join(
-    Deno.cwd(),
-    'tests/fixtures',
-    'workspace-import-maps/deno.json',
-  )
+    assertEquals(output.path, '<stdout>')
+    const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+    const { said } = await import(dataURL)
 
-  const b = await esbuild.build({
-    ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
-    bundle: true,
-    platform: 'neutral',
-    entryPoints: ['./tests/fixtures/workspace/main.ts'],
+    assertEquals(said, 'HELLO_HELLO')
   })
-
-  assertEquals(b.warnings, [])
-  assertEquals(b.errors, [])
-  assertEquals(b.outputFiles.length, 1)
-
-  const output = b.outputFiles[0]
-
-  assertEquals(output.path, '<stdout>')
-  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
-  const { said } = await import(dataURL)
-
-  assertEquals(said, 'HELLO_HELLO')
 })
