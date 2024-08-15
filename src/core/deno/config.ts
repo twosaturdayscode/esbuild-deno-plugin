@@ -16,6 +16,8 @@ interface DenoConfigs {
 type WorkspaceMemberConfig = {
   name?: string
   exports?: string
+  version?: string
+  imports?: Imports
 }
 
 export class DenoConfig {
@@ -41,31 +43,43 @@ export class DenoConfig {
       throw new Error(`Invalid Deno config. At: ${path}`)
     }
 
-    const name = parsed.name as string | undefined
+    const result: WorkspaceMemberConfig = {}
+
+    if (typeof parsed.name === 'string') {
+      result['name'] = parsed.name
+    }
+
+    if (typeof parsed.version === 'string') {
+      result['version'] = parsed.version
+    }
 
     if (typeof parsed.exports === 'string') {
-      return { name, exports: parsed.exports }
+      result['exports'] = parsed.exports
     }
 
     if (isRecord(parsed.exports)) {
       const exports = parsed.exports['.'] as string
 
-      return { name, exports }
+      result['exports'] = exports
     }
 
-    return { name, exports: undefined }
+    if (isRecord(parsed.imports)) {
+      result['imports'] = parsed.imports as Imports
+    }
+
+    return result
   }
 
   static find(path: string): string {
-    const json = new URL(path + '/deno.json')
-    const jsonc = new URL(path + '/deno.jsonc')
+    const json = path + '/deno.json'
+    const jsonc = path + '/deno.jsonc'
 
     if (existsSync(json)) {
-      return json.pathname
+      return json
     }
 
     if (existsSync(jsonc)) {
-      return jsonc.pathname
+      return jsonc
     }
 
     throw new Error(`Could not find a Deno config file at: ${path}`)
