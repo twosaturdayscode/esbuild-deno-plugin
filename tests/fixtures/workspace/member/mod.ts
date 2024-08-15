@@ -1,0 +1,1 @@
+export const parrot = (say: string) => `${say}..${say}`;

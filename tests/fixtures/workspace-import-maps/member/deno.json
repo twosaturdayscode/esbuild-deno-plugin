@@ -1,0 +1,8 @@
+{
+  "name": "@workspace-test/member",
+  "exports": "./mod.ts",
+  "version": "0.0.1",
+  "imports": {
+    "@std/text": "jsr:@std/text@1.0.2"
+  }
+}
