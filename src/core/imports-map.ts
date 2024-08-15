@@ -11,10 +11,14 @@ export class ImportMap {
     return new ImportMap({})
   }
 
-  get isEmpty() {
-    return Object.keys(this.imports).length === 0
+  private constructor(_imports: Imports, _scopes: Scopes = {}) {
+    this.imports = _imports
+    this.scopes = _scopes
   }
 
+  /**
+   * Given a record containing imports and scopes, create a new ImportMap.
+   */
   loadRaw(pln: Record<string, unknown>) {
     if (!isValidMapShape(pln)) {
       throw new Error('Invalid import map shape')
@@ -96,6 +100,10 @@ export class ImportMap {
   }
 
   resolveModule(specifier: string, base: string): string {
+    if (this.isEmpty) {
+      return new URL(specifier, base).href
+    }
+
     const resolvedSpecifier = resolveUrlLike(specifier, base)
 
     /**
@@ -147,6 +155,10 @@ export class ImportMap {
 
     this.imports = Object.fromEntries(result)
     return this
+  }
+
+  get isEmpty() {
+    return Object.keys(this.imports).length === 0
   }
 
   /**

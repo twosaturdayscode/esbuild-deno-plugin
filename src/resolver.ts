@@ -1,4 +1,4 @@
-import { join, toFileUrl } from '@std/path'
+import { dirname, resolve, toFileUrl } from '@std/path'
 
 import type { Plugin } from './concepts/esbuild.ts'
 
@@ -142,13 +142,19 @@ export const denoResolver = (
       // If `workspace` is specified, use the workspace to extend the
       // import map.
       if (Array.isArray(config.workspace) && config.workspace.length > 0) {
-        for (const workspace of config.workspace) {
-          const path = new URL(workspace, toFileUrl(opts.configPath))
-          const { name, exports } = DenoConfig.ofWorkspaceMember(path.href)
+        for (const member of config.workspace) {
+          const root = dirname(opts.configPath)
+          const path = resolve(root, member)
+
+          const { name, exports, imports } = DenoConfig.ofWorkspaceMember(path)
 
           if (!name || !exports) {
             continue
           }
+
+          const importUrl = toFileUrl(resolve(path, exports)).href
+
+          map.addImport(name, importUrl)
 
           map.addImport(name, toFileUrl(join(path.pathname, exports)).href)
         }
@@ -165,22 +171,14 @@ export const denoResolver = (
         return undefined
       }
 
-      let referrer: URL
-
       if (args.importer !== '') {
         if (args.namespace === '') {
           throw new Error('[assert] namespace is empty')
         }
 
-        referrer = new URL(`${args.namespace}:${args.importer}`)
+        const referrer = new URL(`${args.namespace}:${args.importer}`)
 
-        let resolved: string
-
-        if (map.isEmpty) {
-          resolved = new URL(args.path, referrer).href
-        }
-
-        resolved = map.resolveModule(args.path, referrer.href)
+        const resolved = map.resolveModule(args.path, referrer.href)
 
         if (externals.has(resolved)) {
           return { path: resolved, external: true }
@@ -194,15 +192,9 @@ export const denoResolver = (
         })
       }
 
-      referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
+      const referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
 
-      let resolved: string
-
-      resolved = map.resolveModule(args.path, referrer.href)
-
-      if (map.isEmpty) {
-        resolved = new URL(args.path, referrer).href
-      }
+      const resolved = map.resolveModule(args.path, referrer.href)
 
       if (externals.has(resolved)) {
         return { path: resolved, external: true }
