@@ -156,7 +156,11 @@ export const denoResolver = (
 
           map.addImport(name, importUrl)
 
-          map.addImport(name, toFileUrl(join(path.pathname, exports)).href)
+          if (imports) {
+            for (const [k, v] of Object.entries(imports)) {
+              map.addScope(importUrl, { [k]: v })
+            }
+          }
         }
       }
     }
