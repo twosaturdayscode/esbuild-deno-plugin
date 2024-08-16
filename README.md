@@ -24,10 +24,6 @@ Deno modules resolution and loading for `esbuild`.
 - [ ] Support for
       [`vendoring`](https://docs.deno.com/runtime/manual/basics/vendoring/)
 
-*For now this only works if each package use the Deno conventions of
-re-exporting its dependencies, it doesn't work if it relies on its own import
-map. Will implement it soon.
-
 ## Example
 
 This example bundles an entrypoint into a single ESM output.
