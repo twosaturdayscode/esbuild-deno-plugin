@@ -9,44 +9,96 @@ Deno modules resolution and loading for `esbuild`.
 
 ### Already available
 
-- Support for `file:`, `https:`, and `data:` specifiers
-- Support for `npm:` specifiers
-- Support for `jsr:` specifiers
-- Support for import maps (including embedded into `deno.json`)
-- Native loader using Deno's global cache directory
-- Portable loader that works in environments with limited permissions
+- Support for `file:`, `https:`, and `data:` specifiers.
+- Support for `npm:` specifiers.
+- Support for `jsr:` specifiers.
+- Support for import maps (including embedded into `deno.json`).
+- Native loader using Deno's global cache directory.
+- Portable loader that works in environments with limited permissions.
 
-### Added
+### Workspaces
 
-- [x] Support for recently added
-      [`workspaces`](https://docs.deno.com/runtime/manual/basics/workspaces/)
-      feature.*
-- [ ] Support for
-      [`vendoring`](https://docs.deno.com/runtime/manual/basics/vendoring/)
+Recently added [`workspaces`](https://docs.deno.com/runtime/manual/basics/workspaces/)
+feature is supported, not only it enables you to bundle workspace members but it
+resolves their import maps too! Look at the following example.
+
+If you have a `snake` package/member like this:
+
+```typescript
+// packages/snake/mod.ts (workspace member)
+import { toSnakeCase } from "@std/text"
+
+export function snake(hiss: string) {
+  return toSnakeCase(hiss)
+}
+```
+
+It can have an import map that defines the "defaults" of your imports.
+
+```jsonc
+// packages/snake/deno.json
+{
+  "name": "@myscope/snake",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "@std/text": "jsr:@std/text@1.0.3"
+  }
+}
+```
+
+Then you refer to is as usual.
+
+```typescript
+// apps/web/main.ts
+import { snake } from "@myscope/snake"
+
+function main() {
+  console.log(snake("hello world"))
+}
+
+main()
+```
+
+```jsonc
+// apps/web/deno.json
+{
+  "workspace": ["./packages/snake"]
+}
+```
+
+The plugin simply works by adding `scopes` to the main `deno.json` imports map
+overrding the member's imports, obviously your own written scopes takes
+precendence.
+
+### Vendoring
+
+Support for [`vendoring`](https://docs.deno.com/runtime/manual/basics/vendoring/)
+coming soon.
 
 ## Example
 
 This example bundles an entrypoint into a single ESM output.
 
 ```ts
-import * as esbuild from 'npm:esbuild@0.23.0'
+import * as esbuild from "npm:esbuild@0.23.0";
 // Import the WASM build on platforms where running subprocesses is not
 // permitted, such as Deno Deploy, or when running without `--allow-run`.
 // import * as esbuild from "https://deno.land/x/esbuild@0.20.2/wasm.js";
 
-import { denoPlugins } from 'jsr:@duesabati/esbuild-deno-plugin@^0.0.1'
+import { denoPlugins } from "jsr:@duesabati/esbuild-deno-plugin@^0.0.1";
 
 const result = await esbuild.build({
   plugins: [...denoPlugins()],
-  entryPoints: ['https://deno.land/std@0.185.0/bytes/mod.ts'],
-  outfile: './dist/bytes.esm.js',
+  entryPoints: ["https://deno.land/std@0.185.0/bytes/mod.ts"],
+  outfile: "./dist/bytes.esm.js",
   bundle: true,
-  format: 'esm',
-})
+  format: "esm",
+});
 
-console.log(result.outputFiles)
+console.log(result.outputFiles);
 
-esbuild.stop()
+esbuild.stop();
 ```
 
 ## Limitations
