@@ -112,13 +112,6 @@ export const denoResolver = (
       const config = DenoConfig.fromAbsolute(opts.configPath)
 
       if (config.imports) {
-        if (!isStringRecord(config.imports)) {
-          throw new Error('Invalid imports.')
-        }
-
-        if (config.scopes && !isStringRecord(config.scopes)) {
-          throw new Error('Invalid scopes shape')
-        }
         map
           .loadRaw({ imports: config.imports, scopes: config.scopes })
           .resolveWith(toFileUrl(opts.configPath ?? Deno.cwd()).href)
