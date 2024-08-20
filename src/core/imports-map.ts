@@ -253,9 +253,8 @@ export function resolveImportsMatch(
     }
 
     if (
-      k.endsWith('/') &&
-      specifier.startsWith(k) &&
-      (isSpecial(specifier) || specifier.startsWith('@'))
+      k.endsWith('/') && specifier.startsWith(k)
+      // (isSpecial(specifier) || specifier.startsWith('@'))
     ) {
       if (!v.endsWith('/')) {
         throw new Error("Invalid remap URL. Must end with '/'. At key: " + k)
