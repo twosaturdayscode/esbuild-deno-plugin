@@ -4,17 +4,14 @@ import type { Imports, Scopes } from '../concepts/deno.ts'
 import { isUrlLike, resolveUrlLike } from './urls-like.ts'
 
 export class ImportMap {
-  private imports: Imports
-  private scopes: Scopes
+  private imports: Imports = {}
+  private scopes: Scopes = {}
 
   static empty() {
-    return new ImportMap({})
+    return new ImportMap()
   }
 
-  private constructor(_imports: Imports, _scopes: Scopes = {}) {
-    this.imports = _imports
-    this.scopes = _scopes
-  }
+  private constructor() {}
 
   /**
    * Given a record containing imports and scopes, create a new ImportMap.
@@ -74,29 +71,26 @@ export class ImportMap {
     this.scopes[scope] = { ...this.scopes[scope], ...imports }
   }
 
-  resolveWith(base: string): void {
-    const resolvedImports: Imports = ImportMap.resolveImports(
-      this.imports,
-      base,
-    )
+  resolveWith(referrer: string): void {
+    const imports: Imports = this.resolve(this.imports, referrer)
 
-    if (!hasValidRemaps(resolvedImports)) {
+    if (!hasValidRemaps(imports)) {
       throw new Error(
         'Invalid remaps. If a specifier ends with a "/", the value must also end with a "/"',
       )
     }
 
-    const resolvedScopes: Scopes = Object.fromEntries(
+    const scopes: Scopes = Object.fromEntries(
       Object.entries(this.scopes).map(([a, imp]) => {
         if (!isStringRecord(imp)) {
           throw new Error('Invalid import shape. At scope: ' + a)
         }
 
-        if (!URL.canParse(a, base)) {
+        if (!URL.canParse(a, referrer)) {
           throw new Error('Invalid scope. At scope: ' + a)
         }
 
-        const imports = this.sortRecord(ImportMap.resolveImports(imp, base))
+        const imports = this.sortRecord(this.resolve(imp, referrer))
 
         if (!hasValidRemaps(imports)) {
           throw new Error(
@@ -109,8 +103,8 @@ export class ImportMap {
       }),
     )
 
-    const sortedImports = this.sortRecord(resolvedImports)
-    const sortedScopes = this.sortRecord(resolvedScopes)
+    const sortedImports = this.sortRecord(imports)
+    const sortedScopes = this.sortRecord(scopes)
 
     this.imports = sortedImports
     this.scopes = sortedScopes
@@ -177,7 +171,7 @@ export class ImportMap {
   /**
    * Resolve relative imports in the given import map imports.
    */
-  static resolveImports(imports: Imports, base: string): Imports {
+  private resolve(imports: Imports, base: string): Imports {
     return Object.fromEntries(
       Object.entries(imports)
         .map(([k, v]) => {
