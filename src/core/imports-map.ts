@@ -290,9 +290,9 @@ export function resolveImportsMatch(
   return resolvedImport
 }
 
-const specialSchemes = ['ftp', 'file', 'http', 'https', 'ws', 'wss']
+// const specialSchemes = ['ftp', 'file', 'http', 'https', 'ws', 'wss']
 
 /* https://url.spec.whatwg.org/#is-special */
-function isSpecial(url: string): boolean {
-  return specialSchemes.some((s) => url.startsWith(s))
-}
+// function isSpecial(url: string): boolean {
+//   return specialSchemes.some((s) => url.startsWith(s))
+// }
