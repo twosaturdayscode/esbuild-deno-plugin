@@ -10,7 +10,6 @@ import {
 
 import { ImportMap } from './core/imports-map.ts'
 import { DenoConfig } from './core/deno/config.ts'
-import { isStringRecord } from './validations/is-string-record.ts'
 
 const PLUGIN_NAME = 'deno-resolver'
 
