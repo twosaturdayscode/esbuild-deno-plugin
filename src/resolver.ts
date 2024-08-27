@@ -122,6 +122,13 @@ export const denoResolver = (
         )
 
         const fetched = await fetch(importMapPath).then((r) => r.json())
+          .catch(
+            (e) => {
+              throw Error(
+                `Failed to fetch import map at ${importMapPath} due to: ${e}`,
+              )
+            },
+          )
 
         map.load(fetched).resolveWith(importMapPath.href)
       }
@@ -133,35 +140,76 @@ export const denoResolver = (
           const root = dirname(opts.configPath)
           const path = resolve(root, member)
 
-          const { name, exports, imports } = DenoConfig.ofWorkspaceMember(path)
+          const { name, exports, imports, importMap } = DenoConfig
+            .ofWorkspaceMember(path)
 
           if (!name || !exports) {
             continue
           }
 
-          const importUrl = toFileUrl(resolve(path, exports)).href
-          map.addImport(name, importUrl)
+          const mod = toFileUrl(resolve(path, exports)).href
+          map.addImport(name, mod)
+
+          const location = toFileUrl(path + '/').href
+
+          /**
+           * If the user has already defined a scope for this location,
+           * their configuration takes precedence, we should not override it.
+           */
+          if (map.hasScope(location)) continue
+
+          /**
+           * The user has not defined a scope for this location, we can
+           * use the imports map of the member to resolve its imports.
+           */
+          const memberMap = ImportMap.empty()
 
           if (imports) {
-            for (const [k, v] of Object.entries(imports)) {
-              map.addScope(toFileUrl(path + '/').href, { [k]: v })
-            }
+            memberMap.load({ imports }).resolveWith(location)
           }
+
+          if (importMap) {
+            const importMapPath = new URL(importMap, toFileUrl(path))
+
+            const fetched = await fetch(importMapPath).then((r) => r.json())
+              .catch((e) => {
+                throw Error(
+                  `Failed to fetch import map at ${importMapPath} of workspace member ${name} due to: ${e}`,
+                )
+              })
+
+            memberMap.load(fetched).resolveWith(importMapPath.href)
+          }
+
+          map.addScope(location, memberMap.imports)
         }
       }
     }
 
     if (opts.importMapURL) {
       const fetched = await fetch(opts.importMapURL).then((r) => r.json())
+        .catch(
+          (e) => {
+            throw Error(
+              `Failed to fetch import map at ${opts.importMapURL} due to: ${e}`,
+            )
+          },
+        )
+
       map.load(fetched).resolveWith(opts.importMapURL)
     }
 
     b.onResolve({ filter: /.*/ }, async (args) => {
-      // Pass through any node_modules internal resolution.
+      /**
+       * Pass through any node_modules internal resolution.
+       */
       if (isNodeModulesResolution(args)) {
         return undefined
       }
 
+      /**
+       * @todo Document this case.
+       */
       if (args.importer === '' && args.resolveDir === '') {
         return undefined
       }
@@ -181,10 +229,7 @@ export const denoResolver = (
 
         const { path, namespace } = urlToEsbuildResolution(new URL(resolved))
 
-        return await b.resolve(path, {
-          namespace,
-          kind: args.kind,
-        })
+        return await b.resolve(path, { namespace, kind: args.kind })
       }
 
       const referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
@@ -197,10 +242,7 @@ export const denoResolver = (
 
       const { path, namespace } = urlToEsbuildResolution(new URL(resolved))
 
-      return await b.resolve(path, {
-        namespace,
-        kind: args.kind,
-      })
+      return await b.resolve(path, { namespace, kind: args.kind })
     })
   },
 })
