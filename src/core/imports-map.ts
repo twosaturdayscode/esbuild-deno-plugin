@@ -14,9 +14,12 @@ export class ImportMap {
   private constructor() {}
 
   /**
-   * Given a record containing imports and scopes, create a new ImportMap.
+   * Allows to create a new ImportMap instance from a plain object.
+   *
+   * @param pln A serialized / plain object import map.
+   * @returns A new ImportMap instance.
    */
-  loadRaw(pln: Record<string, unknown>) {
+  load(pln: Record<string, unknown>) {
     if (!isValidMapShape(pln)) {
       throw new Error('Invalid import map shape')
     }
