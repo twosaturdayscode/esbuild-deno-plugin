@@ -99,11 +99,6 @@ export const denoResolver = (
      */
     const map = ImportMap.empty()
 
-    if (opts.importMapURL) {
-      const fetched = await fetch(opts.importMapURL).then((r) => r.json())
-      map.loadRaw(fetched).resolveWith(opts.importMapURL)
-    }
-
     /**
      * From deno config file (deno.json/c).     *
      */
@@ -154,6 +149,11 @@ export const denoResolver = (
           }
         }
       }
+    }
+
+    if (opts.importMapURL) {
+      const fetched = await fetch(opts.importMapURL).then((r) => r.json())
+      map.loadRaw(fetched).resolveWith(opts.importMapURL)
     }
 
     b.onResolve({ filter: /.*/ }, async (args) => {
