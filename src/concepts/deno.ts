@@ -9,9 +9,9 @@ export interface Scopes {
   [url: string]: Imports
 }
 
-export interface ImportMap {
+export type PlainImportMap = {
   imports: Imports
-  scopes?: Scopes
+  scopes: Scopes
 }
 
 export async function isRunAllowed() {

@@ -1,17 +1,22 @@
 import { isStringRecord } from '../validations/is-string-record.ts'
 import { isRecord } from '../validations/is-any-record.ts'
-import type { Imports, Scopes } from '../concepts/deno.ts'
-import { isUrlLike, resolveUrlLike } from './urls-like.ts'
+import type { Imports, PlainImportMap, Scopes } from '../concepts/deno.ts'
+import { resolveUrlLike } from './urls-like.ts'
 
 export class ImportMap {
-  private imports: Imports = {}
-  private scopes: Scopes = {}
+  private readonly _imports = new Map<string, string>()
+  private readonly _scopes = new Map<string, Map<string, string>>()
 
+  /**
+   * @returns An empty ImportMap.
+   */
   static empty() {
     return new ImportMap()
   }
 
-  private constructor() {}
+  private constructor(private readonly pln: Partial<PlainImportMap> = {}) {
+    return Object.assign(this, this.pln)
+  }
 
   /**
    * Allows to create a new ImportMap instance from a plain object.
@@ -19,137 +24,176 @@ export class ImportMap {
    * @param pln A serialized / plain object import map.
    * @returns A new ImportMap instance.
    */
-  load(pln: Record<string, unknown>) {
+  load(pln: Partial<PlainImportMap>): ImportMap {
     if (!ImportMap.isValidMapRecord(pln)) {
-      throw new Error('Invalid import map shape')
+      throw new Error('Invalid import map shape.')
     }
 
     Object.entries(pln.imports).forEach(([k, v]) => {
       if (!isValidImportSpecifier(k)) {
-        throw new Error('Invalid import specifier. At key: ' + k)
+        throw new Error(`Invalid import specifier. At import: ${k}`)
       }
 
       if (!isValidImportValue(v)) {
-        throw new Error('Invalid import value. At key: ' + k)
+        throw new Error(`Invalid import value. At import: ${k}`)
+      }
+
+      if (!isValidImport(k, v)) {
+        throw new Error(
+          `Invalid import. If a specifier ends with a "/", the value must also end with a "/". At import: ${k}`,
+        )
       }
     })
 
-    this.imports = pln.imports
-    this.scopes = pln.scopes ?? {}
+    for (const [k, v] of Object.entries(pln.imports)) {
+      this._imports.set(k, v)
+    }
+
+    for (const [k, v] of Object.entries(pln.scopes ?? {})) {
+      this._scopes.set(k, new Map(Object.entries(v)))
+    }
 
     return this
   }
 
-  addImport(specifier: string, path: string) {
+  /**
+   * Add a new import to the map, mutating the current instance.
+   *
+   * @param specifier The import specifier.
+   * @param path The import value.
+   */
+  addImport(specifier: string, path: string): void {
     if (!isValidImportSpecifier(specifier)) {
-      throw new Error('Invalid import specifier. At key: ' + specifier)
+      throw new Error(`Invalid import specifier. At import: ${specifier}`)
     }
 
     if (!isValidImportValue(path)) {
-      throw new Error('Invalid import value. At key: ' + specifier)
+      throw new Error(`Invalid import value. At import: ${specifier}`)
     }
 
-    this.imports[specifier] = path
-  }
-
-  addScope(scope: string, imports: Imports) {
-    if (!URL.canParse(scope)) {
-      throw new Error('Invalid scope. At key: ' + scope)
-    }
-
-    if (!isStringRecord(imports)) {
-      throw new Error('Invalid imports. At key: ' + scope)
-    }
-
-    for (const [k, v] of Object.entries(imports)) {
-      if (!isValidImportSpecifier(k)) {
-        throw new Error('Invalid import specifier. At key: ' + k)
-      }
-
-      if (!isValidImportValue(v)) {
-        throw new Error('Invalid import value. At key: ' + k)
-      }
-    }
-
-    this.scopes[scope] = { ...this.scopes[scope], ...imports }
-  }
-
-  resolveWith(referrer: string): void {
-    const imports: Imports = this.resolve(this.imports, referrer)
-
-    if (!hasValidRemaps(imports)) {
+    if (!isValidImport(specifier, path)) {
       throw new Error(
-        'Invalid remaps. If a specifier ends with a "/", the value must also end with a "/"',
+        'Invalid import. If a specifier ends with a "/", the value must also end with a "/"',
       )
     }
 
-    const scopes: Scopes = Object.fromEntries(
-      Object.entries(this.scopes).map(([a, imp]) => {
-        if (!isStringRecord(imp)) {
-          throw new Error('Invalid import shape. At scope: ' + a)
-        }
+    this._imports.set(specifier, path)
+  }
 
-        if (!URL.canParse(a, referrer)) {
+  /**
+   * Add a new scope to the map, mutating the current instance.
+   *
+   * If the scope already exists, the imports will be merged.
+   *
+   * If an import already exists, the value will be overwritten.
+   *
+   * @param scope The scope specifier.
+   * @param scoped The scoped imports.
+   */
+  addScope(scope: string, scoped: Imports): void {
+    if (!URL.canParse(scope)) {
+      throw new Error(`Invalid scope specifier. At scope: ${scope}`)
+    }
+
+    if (!isStringRecord(scoped)) {
+      throw new Error(`Invalid scoped imports. At scope: ${scope}`)
+    }
+
+    for (const [k, v] of Object.entries(scoped)) {
+      if (!isValidImportSpecifier(k)) {
+        throw new Error(
+          `Invalid import specifier in scope ${scope}. At import key: ${k}`,
+        )
+      }
+
+      if (!isValidImportValue(v)) {
+        throw new Error(
+          `Invalid import value in scope ${scope}. At import key: ${k}`,
+        )
+      }
+
+      if (!isValidImport(k, v)) {
+        throw new Error(
+          `Invalid import in scopes. If a specifier ends with a "/", the value must also end with a "/". At scope: ${scope}`,
+        )
+      }
+    }
+
+    const current = this._scopes.get(scope)
+
+    if (current) {
+      for (const [k, v] of Object.entries(scoped)) {
+        current.set(k, v)
+      }
+
+      this._scopes.set(scope, current)
+      return
+    }
+
+    this._scopes.set(scope, new Map(Object.entries(scoped)))
+  }
+
+  /**
+   * Resolve the import map with a base URL.
+   *
+   * @param base The base URL to resolve the relative imports.
+   * @returns A new resolved ImportMap instance.
+   */
+  resolveWith(base: string): void {
+    const imports: Imports = Object.fromEntries(
+      Array.from(this._imports).map(([k, v]) => [
+        resolveUrlLike(k, base),
+        resolveUrlLike(v, base),
+      ]),
+    )
+
+    const scopes: Scopes = Object.fromEntries(
+      Array.from(this._scopes).map(([a, scoped]) => {
+        if (!URL.canParse(a, base)) {
           throw new Error('Invalid scope. At scope: ' + a)
         }
 
-        const imports = sortRecord(this.resolve(imp, referrer))
+        const imports = Object.fromEntries(
+          Array.from(scoped).map(([k, v]) => [
+            resolveUrlLike(k, base),
+            resolveUrlLike(v, base),
+          ]),
+        )
 
-        if (!hasValidRemaps(imports)) {
-          throw new Error(
-            'Invalid remaps in scopes. If a specifier ends with a "/", the value must also end with a "/". At scope: ' +
-              a,
-          )
-        }
-
-        return [a, imports]
+        return [a, sortRecord(imports)]
       }),
     )
 
     const sortedImports = sortRecord(imports)
     const sortedScopes = sortRecord(scopes)
 
-    this.imports = sortedImports
-    this.scopes = sortedScopes
-  }
+    this._imports.clear()
+    this._scopes.clear()
 
-  resolveModule(specifier: string, referrer: string): string {
-    if (this.isEmpty) {
-      return new URL(specifier, referrer).href
+    for (const [k, v] of Object.entries(sortedImports)) {
+      this._imports.set(k, v)
     }
 
-    const resolved = resolveUrlLike(specifier, referrer)
-
-    /**
-     * Check in the scopes
-     */
-    for (const [scope, scopedImports] of Object.entries(this.scopes)) {
-      if (
-        scope === referrer ||
-        (scope.endsWith('/') && referrer.startsWith(scope))
-      ) {
-        const resolvedImport = resolveImportsMatch(resolved, scopedImports)
-
-        if (resolvedImport) return resolvedImport
-      }
+    for (const [k, v] of Object.entries(sortedScopes)) {
+      this._scopes.set(k, new Map(Object.entries(v)))
     }
-
-    const resolvedImport = resolveImportsMatch(resolved, this.imports)
-
-    if (resolvedImport) return resolvedImport
-
-    return resolved
   }
 
+  /**
+   * For each import that does not end with a slash and is a jsr or npm import,
+   * add a new import with the same key but with a trailing slash.
+   *
+   * @returns A new ImportMap instance with all the imports expanded.
+   */
   expand() {
     const result: [string, string][] = []
 
-    for (const [k, v] of Object.entries(this.imports)) {
+    for (const [k, v] of Array.from(this._imports)) {
       result.push([k, v])
 
       if (
         !k.endsWith('/') &&
-        !this.imports[k + '/'] &&
+        !this._imports.has(k + '/') &&
         (v.startsWith('jsr:') || v.startsWith('npm:'))
       ) {
         const newKey = k + '/'
@@ -163,34 +207,113 @@ export class ImportMap {
       }
     }
 
-    this.imports = Object.fromEntries(result)
+    const expanded = Object.fromEntries(result)
+
+    this._imports.clear()
+
+    for (const [k, v] of Object.entries(expanded)) {
+      this._imports.set(k, v)
+    }
+
     return this
   }
 
-  get isEmpty() {
-    return Object.keys(this.imports).length === 0
+  /**
+   * Use the import map to resolve the given specifier.
+   *
+   * @param specifier The specifier to resolve.
+   * @param referrer The referrer URL of the import.
+   * @returns The value of the import in the import map.
+   */
+  resolveModule(specifier: string, referrer: string): string {
+    if (this.isEmpty) return new URL(specifier, referrer).href
+
+    const resolved = resolveUrlLike(specifier, referrer)
+
+    const resolvedImport = this.findImportValue(resolved, this._imports)
+
+    if (resolvedImport) return resolvedImport
+
+    /**
+     * Check in the scopes
+     */
+    for (const [scope, scopedImports] of Array.from(this._scopes)) {
+      if (
+        scope === referrer ||
+        (scope.endsWith('/') && referrer.startsWith(scope))
+      ) {
+        const resolvedImport = this.findImportValue(resolved, scopedImports)
+
+        if (resolvedImport) return resolvedImport
+      }
+    }
+
+    return resolved
+  }
+
+  private findImportValue(
+    specifier: string,
+    imports: Map<string, string>,
+  ): string | undefined {
+    let resolvedImport: string | undefined = undefined
+
+    for (const [k, v] of Array.from(imports)) {
+      if (specifier === k) {
+        resolvedImport = v
+      }
+
+      /**
+       * Check if key ends with a slash and the specifier starts with the key.
+       *
+       * This would mean that all sub-paths of the key should be resolved to the value.
+       */
+      if (k.endsWith('/') && specifier.startsWith(k)) {
+        const submodule = specifier.slice(k.length)
+
+        if (!URL.canParse(submodule, v)) {
+          throw new Error('Invalid remap URL. At key: ' + k)
+        }
+
+        const url = new URL(submodule, v)
+
+        if (!url.href.startsWith(v)) {
+          throw new Error(
+            'Invalid remap URL, resolution probably backtracking above its specifier. At key: ' +
+              k,
+          )
+        }
+
+        resolvedImport = url.href
+      }
+    }
+
+    return resolvedImport
   }
 
   /**
-   * Resolve relative imports in the given import map imports.
+   * Check whether the given scope exists in the map.
+   *
+   * @param scope The scope key to check.
    */
-  private resolve(imports: Imports, base: string): Imports {
+  hasScope(scope: string): boolean {
+    return this._scopes.has(scope)
+  }
+
+  get isEmpty() {
+    return this._imports.size === 0 && this._scopes.size === 0
+  }
+
+  get hasEmptyImports() {
+    return this._imports.size === 0
+  }
+
+  get imports(): Imports {
+    return Object.fromEntries(this._imports)
+  }
+
+  get scopes(): Scopes {
     return Object.fromEntries(
-      Object.entries(imports)
-        .map(([k, v]) => {
-          if (URL.canParse(k) || isUrlLike(k)) {
-            return [resolveUrlLike(k, base), v]
-          }
-
-          return [k, v]
-        })
-        .map(([k, v]) => {
-          if (URL.canParse(v) || isUrlLike(v)) {
-            return [k, resolveUrlLike(v, base)]
-          }
-
-          throw new Error('Invalid import value. At key: ' + k)
-        }),
+      Array.from(this._scopes).map(([a, b]) => [a, Object.fromEntries(b)]),
     )
   }
 
@@ -227,66 +350,8 @@ function isValidImportValue(value: string): boolean {
   return value.length > 0
 }
 
-/**
- * Check if every key that ends with a "/" has a value that also ends with a "/".
- */
-function hasValidRemaps(imports: Imports): boolean {
-  return Object.entries(imports).every(([k, v]) => {
-    if (k.endsWith('/')) {
-      return v.endsWith('/')
-    }
-
-    return true
-  })
-}
-
-export function resolveImportsMatch(
-  specifier: string,
-  imports: Imports,
-): string | null {
-  let resolvedImport: string | null = null
-
-  for (const [k, v] of Object.entries(imports)) {
-    if (specifier === k) {
-      resolvedImport = v
-    }
-
-    if (
-      k.endsWith('/') && specifier.startsWith(k)
-      // (isSpecial(specifier) || specifier.startsWith('@'))
-    ) {
-      if (!v.endsWith('/')) {
-        throw new Error("Invalid remap URL. Must end with '/'. At key: " + k)
-      }
-
-      /**
-       * This do:
-       *   specifier: @std/path/join
-       *   k: @std/path/
-       *   afterPrefix: join
-       *
-       * @todo find a better name.
-       */
-      const afterPrefix = specifier.slice(k.length)
-
-      if (!URL.canParse(afterPrefix, v)) {
-        throw new Error('Invalid remap URL. At key: ' + k)
-      }
-
-      const url = new URL(afterPrefix, v)
-
-      if (!url.href.startsWith(v)) {
-        throw new Error(
-          'Invalid remap URL, resolution backtracking above its specifier. At key: ' +
-            k,
-        )
-      }
-
-      resolvedImport = url.href
-    }
-  }
-
-  return resolvedImport
+function isValidImport(specifier: string, value: string): boolean {
+  return !(specifier.endsWith('/') && !value.endsWith('/'))
 }
 
 function sortRecord<T extends { [K: string]: unknown }>(record: T): T {
