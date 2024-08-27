@@ -18,6 +18,7 @@ type WorkspaceMemberConfig = {
   exports?: string
   version?: string
   imports?: Imports
+  importMap?: string
 }
 
 export class DenoConfig {
@@ -65,6 +66,10 @@ export class DenoConfig {
 
     if (isRecord(parsed.imports)) {
       result['imports'] = parsed.imports as Imports
+    }
+
+    if (typeof parsed.importMap === 'string') {
+      result['importMap'] = parsed.importMap
     }
 
     return result
