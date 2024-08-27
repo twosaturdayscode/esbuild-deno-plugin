@@ -20,7 +20,7 @@ export class ImportMap {
    * @returns A new ImportMap instance.
    */
   load(pln: Record<string, unknown>) {
-    if (!isValidMapShape(pln)) {
+    if (!ImportMap.isValidMapRecord(pln)) {
       throw new Error('Invalid import map shape')
     }
 
@@ -93,7 +93,7 @@ export class ImportMap {
           throw new Error('Invalid scope. At scope: ' + a)
         }
 
-        const imports = this.sortRecord(this.resolve(imp, referrer))
+        const imports = sortRecord(this.resolve(imp, referrer))
 
         if (!hasValidRemaps(imports)) {
           throw new Error(
@@ -106,8 +106,8 @@ export class ImportMap {
       }),
     )
 
-    const sortedImports = this.sortRecord(imports)
-    const sortedScopes = this.sortRecord(scopes)
+    const sortedImports = sortRecord(imports)
+    const sortedScopes = sortRecord(scopes)
 
     this.imports = sortedImports
     this.scopes = sortedScopes
@@ -194,33 +194,29 @@ export class ImportMap {
     )
   }
 
-  private sortRecord<T extends { [K: string]: unknown }>(record: T): T {
-    return Object.fromEntries(
-      Object.entries(record).sort(([a], [b]) => a.localeCompare(b)),
-    ) as T
-  }
-}
+  /**
+   * Check if the given object has the shape of a valid import map.
+   * @param map The object to check.
+   * @returns A boolean indicating if the object is a valid import map.
+   */
+  static isValidMapRecord(map: unknown): map is {
+    imports: Imports
+    scopes?: Scopes
+  } {
+    if (!isRecord(map)) {
+      return false
+    }
 
-/**
- * Check if the given object is a valid import map.
- */
-function isValidMapShape(map: unknown): map is {
-  imports: Imports
-  scopes?: Scopes
-} {
-  if (!isRecord(map)) {
-    return false
-  }
+    if (!('imports' in map) || !isStringRecord(map.imports)) {
+      return false
+    }
 
-  if (!('imports' in map) && !isStringRecord(map.imports)) {
-    return false
-  }
+    if ('scopes' in map && map.scopes != null && !isRecord(map.scopes)) {
+      return false
+    }
 
-  if ('scopes' in map && map.scopes != null && !isRecord(map.scopes)) {
-    return false
+    return true
   }
-
-  return true
 }
 
 function isValidImportSpecifier(specifier: string): boolean {
@@ -291,6 +287,12 @@ export function resolveImportsMatch(
   }
 
   return resolvedImport
+}
+
+function sortRecord<T extends { [K: string]: unknown }>(record: T): T {
+  return Object.fromEntries(
+    Object.entries(record).sort(([a], [b]) => a.localeCompare(b)),
+  ) as T
 }
 
 // const specialSchemes = ['ftp', 'file', 'http', 'https', 'ws', 'wss']
