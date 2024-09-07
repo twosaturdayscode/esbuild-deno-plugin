@@ -1,4 +1,5 @@
 # esbuild-deno-plugin
+[![deno doc](https://jsr.io/badges/@duesabati/esbuild-deno-plugin)](https://jsr.io/@duesabati/esbuild-deno-plugin)
 
 > [!IMPORTANT]
 > This is a fork and rewrite of the original work of [esbuild_deno_loader](https://github.com/lucacasonato/esbuild_deno_loader)
