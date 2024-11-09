@@ -14,15 +14,15 @@ interface InfoOutput {
   npmPackages: Record<string, NpmPackage>
 }
 
+// const defaultArgs = new Set(['info', '--json', '--no-config', '--no-lock'])
+
+/**
+ * Perform 'deno info' operations.
+ */
 export class DenoInfo {
   private static readonly tempDir = Deno.makeTempDirSync()
 
-  private readonly args: Set<string> = new Set([
-    'info',
-    '--json',
-    '--no-config',
-    '--no-lock',
-  ])
+  readonly args = new Set(['info', '--json', '--no-config', '--no-lock'])
 
   private cwd: Deno.CommandOptions['cwd'] = DenoInfo.tempDir
 
@@ -32,7 +32,7 @@ export class DenoInfo {
       {
         args: ['info', '--json', '--no-config', '--no-lock'],
         cwd: DenoInfo.tempDir,
-        env: { DENO_NO_PACKAGE_JSON: 'true' } as Record<string, string>,
+        env: { DENO_NO_PACKAGE_JSON: 'true' },
         stdout: 'piped',
         stderr: 'inherit',
       },
@@ -71,7 +71,7 @@ export class DenoInfo {
     this.args.add('--node-modules-dir')
   }
 
-  async execute(specifier: string): Promise<InfoOutput> {
+  async read(specifier: string): Promise<InfoOutput> {
     const args = Array.from(this.args)
 
     args.push(specifier)
@@ -96,30 +96,4 @@ export class DenoInfo {
     const txt = decoder.decode(output.stdout)
     return JSON.parse(txt)
   }
-}
-
-interface Lockfile {
-  version: string
-  packages?: { specifiers?: Record<string, string> }
-}
-
-export async function readLockfile(path: string): Promise<Lockfile> {
-  const lockfile: Lockfile = await Deno.readTextFile(path).then(JSON.parse)
-    .catch(
-      (err) => {
-        if (err instanceof Deno.errors.NotFound) {
-          throw new Error(
-            `A Lockfile path has been provided but could not found it at: ${path}`,
-          )
-        }
-
-        throw err
-      },
-    )
-
-  if (lockfile.version < '3') {
-    throw new Error('Unsupported lockfile version: ' + lockfile.version)
-  }
-
-  return lockfile
 }

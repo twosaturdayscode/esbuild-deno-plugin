@@ -99,30 +99,40 @@ export const denoLoader = (opts: DenoLoaderOptions = {}): Plugin => ({
       info.useNodeModulesDir()
     }
 
-    const readInfo = async (specifier: string) => await info.execute(specifier)
+    const readInfo = async (specifier: string) => await info.read(specifier)
 
     const onResolve = async (args: OnResolveArgs) => {
       if (isNodeModulesResolution(args)) {
+        /**
+         * Whenever it's a built-in module, we just return it as external
+         * and let esbuild handle it.
+         */
         if (isBuiltInNodeModule(args.path)) {
           return { path: args.path, external: true }
         }
 
+        /**
+         * If we are using the node_modules directory, we don't need to do anything.
+         * We just let esbuild handle it.
+         */
         if (cnf.isUsingNodeModules) {
           return undefined
         }
 
         if (cnf.isUsingNativeLoader) {
-          if (args.path.startsWith('.')) {
-            return undefined
-          }
-
-          const packagePath = nodeDir.readPackagePath(args.path)
+          /**
+           * Using the native loader, if it's a relative path, we just let
+           * esbuild handle it.
+           */
+          if (args.path.startsWith('.')) return undefined
 
           const pkgId = nodeDir.findPackageId(args.importer, args.path)
 
           const resolveDir = await nodeDir.resolvePackage(pkgId)
 
-          return await b.resolve(packagePath, {
+          nodeDir.registerNodeModule(resolveDir, pkgId)
+
+          return await b.resolve(args.path, {
             kind: args.kind,
             resolveDir,
             importer: args.importer,

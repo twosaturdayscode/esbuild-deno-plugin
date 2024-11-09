@@ -1,14 +1,20 @@
 {
-  "version": "3",
-  "packages": {
-    "specifiers": {
-      "jsr:@std/text@1.0.2": "jsr:@std/text@1.0.2"
-    },
-    "jsr": {
-      "@std/text@1.0.2": {
-        "integrity": "8a6a7166ea597377c7649f327f6a8866c3fcbb26e846efa1bdfb890d07711e20"
-      }
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/text@1.0.2": "1.0.2"
+  },
+  "jsr": {
+    "@std/text@1.0.2": {
+      "integrity": "8a6a7166ea597377c7649f327f6a8866c3fcbb26e846efa1bdfb890d07711e20"
     }
   },
-  "remote": {}
+  "workspace": {
+    "members": {
+      "member": {
+        "dependencies": [
+          "jsr:@std/text@1.0.2"
+        ]
+      }
+    }
+  }
 }

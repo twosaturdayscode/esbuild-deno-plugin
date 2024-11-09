@@ -32,11 +32,17 @@ export class Externals {
   }
 }
 
+/**
+ * Check if the given path is inside a node_modules directory.
+ */
 export function isInNodeModules(path: string): boolean {
   return path.includes(SLASH_NODE_MODULES_SLASH) ||
     path.endsWith(SLASH_NODE_MODULES)
 }
 
+/**
+ * Check if the given resolution is a node_modules resolution.
+ */
 export function isNodeModulesResolution(args: OnResolveArgs) {
   return (
     (args.namespace === '' || args.namespace === 'file') &&

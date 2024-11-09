@@ -675,3 +675,69 @@ Deno.test('Workspace with import maps, but the import is not in mod', async () =
 
   assertEquals(said, 'HELLO_HELLO')
 })
+
+Deno.test('Resolve NPM package', async () => {
+  const b = await esbuild.build({
+    ...BASE_OPTIONS,
+    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    entryPoints: ['tests/fixtures/npm/preact.tsx'],
+  })
+
+  assertEquals(b.warnings, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.outputFiles.length, 1)
+
+  const output = b.outputFiles[0]
+  assertEquals(output.path, '<stdout>')
+
+  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+  const render = await import(dataURL)
+
+  assertEquals(render.default, '<div>hello world</div>')
+})
+
+Deno.test('React', async () => {
+  const b = await esbuild.build({
+    ...BASE_OPTIONS,
+    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    entryPoints: ['tests/fixtures/react/mod.tsx'],
+    bundle: true,
+    external: ['npm:react', 'react-dom'],
+  })
+
+  assertEquals(b.warnings, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.outputFiles.length, 1)
+
+  const output = b.outputFiles[0]
+  assertEquals(output.path, '<stdout>')
+
+  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+  const module = await import(dataURL)
+
+  assertEquals(module.default.key, 'Hello world')
+})
+
+Deno.test('Wouter', async () => {
+  const b = await esbuild.build({
+    ...BASE_OPTIONS,
+    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    entryPoints: ['tests/fixtures/wouter/mod.tsx'],
+    bundle: true,
+  })
+
+  assertEquals(b.warnings, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.outputFiles.length, 1)
+
+  const output = b.outputFiles[0]
+  assertEquals(output.path, '<stdout>')
+
+  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+  const module = await import(dataURL)
+
+  // assertEquals(module.default.key, 'Hello world')
+})

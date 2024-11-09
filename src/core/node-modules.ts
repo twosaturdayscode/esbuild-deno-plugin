@@ -26,13 +26,13 @@ export class NodeModulesDirectory {
       return id
     }
 
-    if (importer !== dirname(importer)) {
-      this.findParentPackageId(dirname(importer))
+    if (importer === '/' || importer === '.') {
+      throw new Error(
+        `Could not find package ID for importer: ${importer}`,
+      )
     }
 
-    throw new Error(
-      `Could not find package ID for importer: ${importer}`,
-    )
+    return this.findParentPackageId(dirname(importer))
   }
 
   registerNodeModule(dir: string, pkgId: string) {
@@ -41,6 +41,7 @@ export class NodeModulesDirectory {
 
   findPackageId(importer: string, path: string) {
     const parentPackageId = this.findParentPackageId(importer)
+
     const [packageName] = this.readPackagePath(path).split('/')
 
     const parentPackage = this.getPackage(parentPackageId)
@@ -65,8 +66,7 @@ export class NodeModulesDirectory {
     const pkg = this.getPackage(pkgId)
 
     if (this.linkDir.has(pkgId)) {
-      const linkDir = this.linkDir.get(pkgId)
-      return linkDir!
+      return this.linkDir.get(pkgId)!
     }
 
     let name = pkg.name
@@ -77,6 +77,15 @@ export class NodeModulesDirectory {
 
     const { denoDir, npmCache } = await NodeModulesDirectory.rootInfo
 
+    /**
+     * @todo Move this to its place once you refactor this class.
+     *
+     * The npmDir is not always `registry.npmjs.org` it changes based on the
+     * registry used. If using a private registry it will be the domain of the
+     * registry. This info is found in the `.npmrc` file.
+     *
+     * See https://docs.deno.com/runtime/manual/node/private_registries/
+     */
     const packageDir = join(
       npmCache,
       'registry.npmjs.org',
@@ -137,6 +146,7 @@ export class NodeModulesDirectory {
     }
 
     const [name, ...rest] = path.split('/')
+
     return [name, rest].join('/')
   }
 
