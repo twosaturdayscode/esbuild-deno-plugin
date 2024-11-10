@@ -18,10 +18,6 @@ export class DenoLockfile {
         },
       )
 
-    if (lockfile.version < '3') {
-      throw new Error('Unsupported lockfile version: ' + lockfile.version)
-    }
-
     return lockfile
   }
 }
