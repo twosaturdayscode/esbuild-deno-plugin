@@ -16,11 +16,7 @@ export class LoaderPluginConf {
   static async fromOptions(opts: DenoLoaderOptions): Promise<LoaderPluginConf> {
     const defaultLoader = await LoaderPluginConf.defaultLoader()
 
-    if (opts.loader && !LoaderPluginConf.isSupported(opts.loader)) {
-      throw new Error(`Invalid loader "${opts.loader}"`)
-    }
-
-    const loader = new LoaderPluginConf(opts.loader ?? defaultLoader)
+    const loader = new LoaderPluginConf(defaultLoader)
 
     if (opts.configPath) {
       const config = DenoConfig.fromAbsolute(opts.configPath)
