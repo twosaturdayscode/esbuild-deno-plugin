@@ -4,13 +4,13 @@ import { denoLoader } from './src/loader.ts'
 import { denoResolver } from './src/resolver.ts'
 
 export interface DenoPluginsOptions {
-  /**
-   * Specify which loader to use. By default this will use the `native` loader,
-   * unless the `--allow-run` permission has not been given.
-   *
-   * See {@link denoLoader } for more information on the different loaders.
-   */
-  loader?: 'native' | 'portable'
+  // /**
+  //  * Specify which loader to use. By default this will use the `native` loader,
+  //  * unless the `--allow-run` permission has not been given.
+  //  *
+  //  * See {@link denoLoader } for more information on the different loaders.
+  //  */
+  // loader?: 'native'
 
   /**
    * Specify the path to a deno.json config file to use. This is equivalent to

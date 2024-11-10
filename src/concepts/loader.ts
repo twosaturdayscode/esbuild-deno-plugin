@@ -38,13 +38,13 @@ export interface ESMLoader {
 export type Loader = LoaderResolver & ESMLoader
 
 export interface DenoLoaderOptions {
-  /**
-   * Specify which loader to use. By default this will use the `native` loader,
-   * unless the `--allow-run` permission has not been given.
-   *
-   * See {@link denoLoaderPlugin} for more information on the different loaders.
-   */
-  loader?: LoaderType
+  // /**
+  //  * Specify which loader to use. By default this will use the `native` loader,
+  //  * unless the `--allow-run` permission has not been given.
+  //  *
+  //  * See {@link denoLoaderPlugin} for more information on the different loaders.
+  //  */
+  // loader?: LoaderType
 
   /**
    * Specify the path to a deno.json config file to use. This is equivalent to
