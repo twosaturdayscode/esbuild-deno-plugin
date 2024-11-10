@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "3",
   "specifiers": {
     "jsr:@std/text@1.0.2": "1.0.2"
   },
