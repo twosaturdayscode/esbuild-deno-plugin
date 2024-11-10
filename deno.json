@@ -24,8 +24,7 @@
   "lint": { "exclude": ["tests/"] },
   "tasks": {
     "prepare": "deno fmt && deno lint",
-    "test:native": "deno test -A tests/loader-native.test.ts",
-    "test:portable": "deno test -A tests/loader-portable.test.ts",
+    "test:native": "deno test -A tests/loader-native.test.ts --trace-leaks",
     "deploy": ".tools/deploy.sh"
   }
 }

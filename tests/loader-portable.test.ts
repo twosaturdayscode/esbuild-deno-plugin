@@ -21,11 +21,12 @@ const BASE_OPTIONS = {
   absWorkingDir: Deno.cwd(),
 } satisfies esbuild.BuildOptions
 
-const ifWindows = Deno.build.os === 'windows'
+// const ifWindows = Deno.build.os === 'windows'
+const always = true
 
 const LOADER_TYPE = 'portable' as const
 
-describe('Portable loader suite', { ignore: ifWindows }, () => {
+describe('Portable loader suite', { ignore: always }, () => {
   it('Remote (.ts)', async () => {
     const b = await esbuild.build({
       ...BASE_OPTIONS,

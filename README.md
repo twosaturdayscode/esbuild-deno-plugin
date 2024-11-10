@@ -15,7 +15,6 @@ Deno modules resolution and loading for `esbuild`.
 - Support for `jsr:` specifiers.
 - Support for import maps (including embedded into `deno.json`).
 - Native loader using Deno's global cache directory.
-- Portable loader that works in environments with limited permissions.
 
 ### Workspaces
 
@@ -101,20 +100,6 @@ console.log(result.outputFiles);
 
 esbuild.stop();
 ```
-
-## Limitations
-
-- The `"portable"` loader does not use the Deno module cache, so all remote
-  specifiers are downloaded on every run.
-
-- When using the `"portable"` loader, all `npm:` dependencies must be
-  pre-downloaded into a local `node_modules/` directory.
-
-- When using the `"portable"` loader with `jsr:` specifiers, a lockfile must be
-  present and passed to the loader (either using `configPath` or `lockPath`).
-
-- `npm:` specifiers are not supported on WASM esbuild builds due to FS access
-  limitations (see https://github.com/evanw/esbuild/pull/2968).
 
 ### Permissions
 
