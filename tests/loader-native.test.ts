@@ -24,7 +24,7 @@ const LOADER_TYPE = 'native' as const
 Deno.test('Remote (.ts)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['https://deno.land/std@0.185.0/collections/without_all.ts'],
   })
 
@@ -43,7 +43,7 @@ Deno.test('Remote (.ts)', async () => {
 Deno.test('Local (.ts)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.ts'],
   })
 
@@ -62,7 +62,7 @@ Deno.test('Local (.ts)', async () => {
 Deno.test('Remote (.mts)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: [
       'https://gist.githubusercontent.com/lucacasonato/4ad57db57ee8d44e4ec08d6a912e93a7/raw/f33e698b4445a7243d72dbfe95afe2d004c7ffc6/mod.mts',
     ],
@@ -82,7 +82,7 @@ Deno.test('Remote (.mts)', async () => {
 Deno.test('Local (.mts)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.mts'],
   })
 
@@ -100,7 +100,7 @@ Deno.test('Local (.mts)', async () => {
 Deno.test('Local (.js)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.js'],
   })
 
@@ -118,7 +118,7 @@ Deno.test('Local (.js)', async () => {
 Deno.test('Remote (.mjs)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: [
       'https://gist.githubusercontent.com/lucacasonato/4ad57db57ee8d44e4ec08d6a912e93a7/raw/f33e698b4445a7243d72dbfe95afe2d004c7ffc6/mod.mjs',
     ],
@@ -138,7 +138,7 @@ Deno.test('Remote (.mjs)', async () => {
 Deno.test('Local (.mjs)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.mjs'],
   })
 
@@ -159,7 +159,7 @@ Deno.test('Local (.mjs)', async () => {
 Deno.test('Remote (.jsx)', { ignore: true }, async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['https://crux.land/GeaWJ'],
   })
 
@@ -177,7 +177,7 @@ Deno.test('Remote (.jsx)', { ignore: true }, async () => {
 Deno.test('Local (.jsx)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.jsx'],
   })
 
@@ -198,7 +198,7 @@ Deno.test('Local (.jsx)', async () => {
 Deno.test('Remote (.tsx)', { ignore: true }, async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['https://crux.land/2Qjyo7'],
   })
 
@@ -216,7 +216,7 @@ Deno.test('Remote (.tsx)', { ignore: true }, async () => {
 Deno.test('Local (.tsx)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/mod.tsx'],
   })
 
@@ -234,7 +234,7 @@ Deno.test('Local (.tsx)', async () => {
 Deno.test('Bundle remote imports', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['https://deno.land/std@0.185.0/uuid/mod.ts'],
@@ -254,7 +254,7 @@ Deno.test('Bundle remote imports', async () => {
 Deno.test('Local (.json)', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/data.json'],
     bundle: true,
   })
@@ -278,7 +278,7 @@ Deno.test('Local (.json)', async () => {
 Deno.test('Remote HTTP redirects are de-duped', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     bundle: true,
     entryPoints: ['tests/fixtures/remote_redirects.js'],
   })
@@ -300,7 +300,7 @@ Deno.test('Bundle explicit import map', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
     plugins: [
-      ...denoPlugins({ importMapURL: IMPORTMAP_URL, loader: LOADER_TYPE }),
+      ...denoPlugins({ importMapURL: IMPORTMAP_URL }),
     ],
     bundle: true,
     platform: 'neutral',
@@ -323,7 +323,7 @@ Deno.test('Bundle config inline import map', async () => {
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ configPath, loader: LOADER_TYPE })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/mapped.js'],
@@ -344,7 +344,7 @@ Deno.test('Bundle config ref import map', async () => {
   const configPath = join(Deno.cwd(), 'tests/fixtures', 'config_ref.json')
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ configPath, loader: LOADER_TYPE })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/mapped.js'],
@@ -370,7 +370,7 @@ Deno.test('Bundle config inline import map with expansion', async () => {
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ configPath, loader: LOADER_TYPE })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/mapped_jsr.js'],
@@ -410,7 +410,7 @@ Deno.test('Custom plugin for scheme', async () => {
     plugins: [
       denoResolver(),
       COMPUTED_PLUGIN,
-      denoLoader({ loader: LOADER_TYPE }),
+      denoLoader(),
     ],
     entryPoints: ['computed:1+2'],
   })
@@ -432,7 +432,7 @@ Deno.test('Custom plugin for scheme with import map', async () => {
     plugins: [
       denoResolver({ importMapURL: IMPORTMAP_URL }),
       COMPUTED_PLUGIN,
-      denoLoader({ importMapURL: IMPORTMAP_URL, loader: LOADER_TYPE }),
+      denoLoader({ importMapURL: IMPORTMAP_URL }),
     ],
     bundle: true,
     entryPoints: ['tests/fixtures/mapped-computed.js'],
@@ -454,7 +454,7 @@ Deno.test('Uncached data url', async () => {
   const rand = Math.random()
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ configPath, loader: LOADER_TYPE })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: [
@@ -481,7 +481,7 @@ Deno.test('Externals', async () => {
   const configPath = join(Deno.cwd(), 'tests/fixtures', 'config_ref.json')
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ configPath, loader: LOADER_TYPE })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/externals.ts'],
@@ -501,7 +501,7 @@ Deno.test('JSR - auto discovered lock file', async () => {
   const configPath = join(Deno.cwd(), 'tests/fixtures', 'jsr', 'deno.json')
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['jsr:@std/path@^0.213'],
@@ -526,7 +526,7 @@ Deno.test('JSR - lock file referenced in deno.json', async () => {
   const configPath = join(Deno.cwd(), 'tests/fixtures', 'jsr_deno.json')
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['jsr:@std/path@^0.213'],
@@ -551,7 +551,7 @@ Deno.test('JSR - no lockfile', async () => {
   const tmp = Deno.makeTempDirSync()
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['jsr:@std/path@0.213.1'],
@@ -578,7 +578,7 @@ Deno.test('Vendoring', { ignore: true }, async () => {
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/uncached.ts'],
@@ -601,7 +601,7 @@ Deno.test('Workspace', async () => {
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/workspace/main.ts'],
@@ -629,7 +629,7 @@ Deno.test('Workspace with import maps', async () => {
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/workspace/main.ts'],
@@ -657,7 +657,7 @@ Deno.test('Workspace with import maps, but the import is not in mod', async () =
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE, configPath })],
+    plugins: [...denoPlugins({ configPath })],
     bundle: true,
     platform: 'neutral',
     entryPoints: ['tests/fixtures/workspace/main.ts'],
@@ -679,7 +679,7 @@ Deno.test('Workspace with import maps, but the import is not in mod', async () =
 Deno.test('Resolve NPM package', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/npm/preact.tsx'],
   })
 
@@ -700,7 +700,7 @@ Deno.test('Resolve NPM package', async () => {
 Deno.test('React', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/react/mod.tsx'],
     bundle: true,
     external: ['npm:react', 'react-dom'],
@@ -723,7 +723,7 @@ Deno.test('React', async () => {
 Deno.test('Wouter', async () => {
   const b = await esbuild.build({
     ...BASE_OPTIONS,
-    plugins: [...denoPlugins({ loader: LOADER_TYPE })],
+    plugins: [...denoPlugins()],
     entryPoints: ['tests/fixtures/wouter/mod.tsx'],
     bundle: true,
   })
