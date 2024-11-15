@@ -9,9 +9,9 @@ export class NodeModulesDirectory {
   /** Cache the deno info command executed on project root. */
   private static readonly rootInfo = DenoInfo.root()
 
-  private readonly nodeModulesDir: Map<string, string> = new Map()
-  private readonly npmPackagesDir: Map<string, NpmPackage> = new Map()
-  private readonly linkDir: Map<string, string> = new Map()
+  readonly nodeModulesDir: Map<string, string> = new Map()
+  readonly npmPackagesDir: Map<string, NpmPackage> = new Map()
+  readonly linkDir: Map<string, string> = new Map()
 
   constructor(private readonly path: string) {}
 

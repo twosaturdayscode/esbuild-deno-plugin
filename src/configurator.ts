@@ -21,9 +21,9 @@ export class LoaderPluginConf {
     if (opts.configPath) {
       const config = DenoConfig.fromAbsolute(opts.configPath)
 
-      if (config.lock !== false) {
-        loader.setLockPath(join(dirname(opts.configPath), 'deno.lock'))
-      }
+      // if (config.lock !== false) {
+      //   loader.setLockPath(join(dirname(opts.configPath), 'deno.lock'))
+      // }
 
       if (typeof config.lock === 'string' && config.lock !== '') {
         loader.setLockPath(join(dirname(opts.configPath), config.lock))

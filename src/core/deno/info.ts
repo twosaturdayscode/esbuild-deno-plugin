@@ -26,6 +26,8 @@ export class DenoInfo {
 
   private cwd: Deno.CommandOptions['cwd'] = DenoInfo.tempDir
 
+  private info_cache = new Map<string, InfoOutput>()
+
   static async root(): Promise<RootInfoOutput> {
     const cmd = new Deno.Command(
       Deno.execPath(),
@@ -63,8 +65,10 @@ export class DenoInfo {
   }
 
   useLockFile(path: string) {
-    this.args.delete('--no-lock')
-    this.args.add(`--lock=${path}`)
+    if (path) {
+      this.args.delete('--no-lock')
+      this.args.add(`--lock=${path}`)
+    }
   }
 
   useNodeModulesDir() {
@@ -72,6 +76,10 @@ export class DenoInfo {
   }
 
   async read(specifier: string): Promise<InfoOutput> {
+    if (this.info_cache.has(specifier)) {
+      return this.info_cache.get(specifier)!
+    }
+
     const args = Array.from(this.args)
 
     args.push(specifier)
@@ -93,7 +101,9 @@ export class DenoInfo {
       throw new Error(`Failed to call 'deno info' on '${specifier}'`)
     }
 
-    const txt = decoder.decode(output.stdout)
-    return JSON.parse(txt)
+    const info = JSON.parse(decoder.decode(output.stdout))
+    this.info_cache.set(specifier, info)
+
+    return info
   }
 }
