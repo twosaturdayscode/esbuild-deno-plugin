@@ -22,9 +22,7 @@ export class NodeModulesDirectory {
   findParentPackageId(importer: string): string {
     const id = this.nodeModulesDir.get(importer)
 
-    if (id) {
-      return id
-    }
+    if (id) return id
 
     if (importer === '/' || importer === '.') {
       throw new Error(
@@ -42,18 +40,18 @@ export class NodeModulesDirectory {
   findPackageId(importer: string, path: string) {
     const parentPackageId = this.findParentPackageId(importer)
 
-    const [packageName] = this.readPackagePath(path).split('/')
+    const package_name = this.readPackageNameFrom(path)
 
     const parentPackage = this.getPackage(parentPackageId)
 
-    if (parentPackage.name === packageName) {
+    if (parentPackage.name === package_name) {
       return parentPackageId
     }
 
     for (const dep of parentPackage.dependencies) {
       const depPackage = this.getPackage(dep)
 
-      if (depPackage.name === packageName) return dep
+      if (depPackage.name === package_name) return dep
     }
 
     return parentPackageId
@@ -138,16 +136,35 @@ export class NodeModulesDirectory {
     return linkDirPath
   }
 
-  readPackagePath(path: string) {
-    if (path.startsWith('@')) {
-      const [scope, name, ...rest] = path.split('/')
-
-      return [`${scope}/${name}`, rest].join('/')
+  /**
+   * This function is used to get the package name from an import path,
+   * that is not a file path or url.
+   *
+   * @example
+   *
+   * // Say we have a package with the name `@foo/bar` and we want to get the
+   * // package name from the import path `@foo/bar/baz/qux`.
+   * const import_path = '@foo/bar/baz/qux'
+   * const package_name = readPackagePath(import_path)
+   * console.log(package_name) // @foo/bar
+   *
+   * // Say we have a package with the name `foo` and we want to get the
+   * // package name from the import path `foo/bar/baz/qux`.
+   * const import_path = 'foo/bar/baz/qux'
+   * const package_name = readPackagePath(import_path)
+   * console.log(package_name) // foo
+   *
+   * @param import_path
+   * @returns
+   */
+  readPackageNameFrom(import_path: string) {
+    if (import_path.startsWith('@')) {
+      const [scope, name] = import_path.split('/')
+      return `${scope}/${name}`
     }
 
-    const [name, ...rest] = path.split('/')
-
-    return [name, rest].join('/')
+    const [name] = import_path.split('/')
+    return name
   }
 
   /** @todo If it's used only in the resolve function make it private. */
