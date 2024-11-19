@@ -1,0 +1,10 @@
+{
+  "version": "3",
+  "redirects": {
+    "https://esm.sh/v135/@types/natural-compare-lite@~1.4/index.d.ts": "https://esm.sh/v135/@types/natural-compare-lite@1.4.2/index.d.ts"
+  },
+  "remote": {
+    "https://esm.sh/natural-compare-lite@1.4.0": "28360609d0e288f60ae12a0e2f3eff8c3739dd3879b8cc6c4ac4b675e1560dfb",
+    "https://esm.sh/v135/natural-compare-lite@1.4.0/denonext/natural-compare-lite.mjs": "b4f0b6387648c861bf05ff3ba551ca164020962dea7ae434a200e4aa4fdb6b9b"
+  }
+}

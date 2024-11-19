@@ -741,3 +741,27 @@ Deno.test('Wouter', async () => {
 
   // assertEquals(module.default.key, 'Hello world')
 })
+
+Deno.test('Workspace - glob', async () => {
+  const configPath = join(Deno.cwd(), 'tests/fixtures', 'workspace-glob/deno.json')
+
+  const b = await esbuild.build({
+    ...BASE_OPTIONS,
+    plugins: [...denoPlugins({ configPath })],
+    bundle: true,
+    platform: 'neutral',
+    entryPoints: ['tests/fixtures/workspace-glob/main.ts'],
+  })
+
+  assertEquals(b.warnings, [])
+  assertEquals(b.errors, [])
+  assertEquals(b.outputFiles.length, 1)
+
+  const output = b.outputFiles[0]
+
+  assertEquals(output.path, '<stdout>')
+  const dataURL = `data:application/javascript;base64,${btoa(output.text)}`
+  const { said } = await import(dataURL)
+
+  assertEquals(said, 'hello..hello')
+})

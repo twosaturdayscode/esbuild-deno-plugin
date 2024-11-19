@@ -1,0 +1,5 @@
+{
+  "name": "@workspace-test/member-a",
+  "exports": "./mod.ts",
+  "version": "0.0.1"
+}

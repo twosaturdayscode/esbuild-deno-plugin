@@ -136,10 +136,22 @@ export const denoResolver = (
       // If `workspace` is specified, use the workspace to extend the
       // import map.
       if (Array.isArray(config.workspace) && config.workspace.length > 0) {
-        for (const member of config.workspace) {
-          const root = dirname(opts.configPath)
-          const path = resolve(root, member)
+        const root = dirname(opts.configPath)
 
+        const workspace_members = config.workspace.map((path) => {
+          if (is_glob(path)) {
+            const glob = resolve(root, get_root_of(path))
+            const members = Array.from(Deno.readDirSync(glob))
+              .filter((e) => e.isDirectory)
+              .map((e) => resolve(glob, e.name))
+
+            return members
+          }
+
+          return resolve(root, path)
+        }).flat()
+
+        for (const path of workspace_members) {
           const { name, exports, imports, importMap } = DenoConfig
             .ofWorkspaceMember(path)
 
@@ -246,3 +258,6 @@ export const denoResolver = (
     })
   },
 })
+
+const is_glob = (path: string) => path.endsWith('*')
+const get_root_of = (glob: string) => glob.split('/').slice(0, -1).join('/')
