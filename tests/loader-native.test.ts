@@ -743,7 +743,11 @@ Deno.test('Wouter', async () => {
 })
 
 Deno.test('Workspace - glob', async () => {
-  const configPath = join(Deno.cwd(), 'tests/fixtures', 'workspace-glob/deno.json')
+  const configPath = join(
+    Deno.cwd(),
+    'tests/fixtures',
+    'workspace-glob/deno.json',
+  )
 
   const b = await esbuild.build({
     ...BASE_OPTIONS,
