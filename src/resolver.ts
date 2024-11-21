@@ -1,4 +1,5 @@
 import { dirname, resolve, toFileUrl } from '@std/path'
+import { existsSync } from '@std/fs'
 
 import type { Plugin } from './concepts/esbuild.ts'
 
@@ -141,9 +142,11 @@ export const denoResolver = (
         const workspace_members = config.workspace.map((path) => {
           if (is_glob(path)) {
             const glob = resolve(root, get_root_of(path))
+
             const members = Array.from(Deno.readDirSync(glob))
               .filter((e) => e.isDirectory)
               .map((e) => resolve(glob, e.name))
+              .filter(is_deno_project)
 
             return members
           }
@@ -261,3 +264,5 @@ export const denoResolver = (
 
 const is_glob = (path: string) => path.endsWith('*')
 const get_root_of = (glob: string) => glob.split('/').slice(0, -1).join('/')
+const is_deno_project = (path: string) =>
+  existsSync(path + '/deno.json') || existsSync(path + '/deno.jsonc')
