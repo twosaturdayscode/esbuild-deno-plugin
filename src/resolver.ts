@@ -111,10 +111,6 @@ export const denoResolver = (
           .load({ imports: config.imports, scopes: config.scopes }, {
             base: toFileUrl(opts.configPath ?? Deno.cwd()).href,
           })
-
-        if (expandImports) {
-          map.expand()
-        }
       }
 
       if (config.importMap) {
@@ -186,12 +182,18 @@ export const denoResolver = (
           /**
            * The user has not defined a scope for this location, we can
            * use the imports map of the member to resolve its imports.
+           *
+           * We create an import map for each workspace member.
            */
           const memberMap = ImportMap.empty()
 
           if (imports) {
             memberMap.load({ imports }, { base: location })
           }
+
+          // if (scopes) {
+          //   memberMap.load({ scopes }, { base: location })
+          // }
 
           if (importMap) {
             const importMapPath = new URL(importMap, toFileUrl(path))
@@ -206,6 +208,10 @@ export const denoResolver = (
             memberMap.load(fetched, { base: importMapPath.href })
           }
 
+          /**
+           * Finally, we load the member map into the root map as scoped
+           * imports.
+           */
           map.addScope(location, memberMap.imports)
         }
       }
@@ -216,7 +222,7 @@ export const denoResolver = (
         .catch(
           (e) => {
             throw Error(
-              `Failed to fetch import map at ${opts.importMapURL} due to: ${e}`,
+              `Failed to fetch import map at ${opts.importMapURL} due to: ${e}.`,
             )
           },
         )
@@ -224,24 +230,28 @@ export const denoResolver = (
       map.load(fetched, { base: opts.importMapURL })
     }
 
+    if (expandImports) {
+      map.expand()
+    }
+
+    /**
+     * Now that we have finalized the import map, we can start the resolution
+     * process.
+     */
     b.onResolve({ filter: /.*/ }, async (args) => {
       /**
        * Pass through any node_modules internal resolution.
        */
-      if (isNodeModulesResolution(args)) {
-        return undefined
-      }
+      if (isNodeModulesResolution(args)) return undefined
 
       /**
        * @todo Document this case.
        */
-      if (args.importer === '' && args.resolveDir === '') {
-        return undefined
-      }
+      if (args.importer === '' && args.resolveDir === '') return undefined
 
       if (args.importer !== '') {
         if (args.namespace === '') {
-          throw new Error('[assert] namespace is empty')
+          throw new Error('[assert] namespace is empty.')
         }
 
         const referrer = new URL(`${args.namespace}:${args.importer}`)
