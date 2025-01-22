@@ -1,59 +1,3 @@
-export class JSRSpecifier {
-  readonly name: string = ''
-  readonly path: string = ''
-  readonly version: string | null = null
-
-  constructor(pln: Partial<JSRSpecifier>) {
-    Object.assign(this, pln)
-  }
-
-  static fromURL(url: URL): JSRSpecifier {
-    if (url.protocol !== 'jsr:') throw new Error('Invalid jsr specifier')
-
-    const path = url.pathname
-    const startIndex = path[0] === '/' ? 1 : 0
-
-    if (path[startIndex] !== '@') {
-      throw new Error(`Invalid jsr specifier: ${url}`)
-    }
-
-    const firstSlash = path.indexOf('/', startIndex)
-
-    if (firstSlash === -1) {
-      throw new Error(`Invalid jsr specifier: ${url}`)
-    }
-
-    let pathStartIndex = path.indexOf('/', firstSlash + 1)
-    let versionStartIndex = path.indexOf('@', firstSlash + 1)
-
-    if (pathStartIndex === -1) pathStartIndex = path.length
-
-    if (versionStartIndex === -1) versionStartIndex = path.length
-
-    if (versionStartIndex > pathStartIndex) {
-      versionStartIndex = pathStartIndex
-    }
-
-    if (startIndex === versionStartIndex) {
-      throw new Error(`Invalid jsr specifier: ${url}`)
-    }
-
-    const n = path.slice(startIndex, versionStartIndex)
-
-    const v = versionStartIndex === pathStartIndex
-      ? null
-      : path.slice(versionStartIndex + 1, pathStartIndex)
-
-    const p = pathStartIndex === path.length ? '' : path.slice(pathStartIndex)
-
-    return new JSRSpecifier({ name: n, version: v, path: p })
-  }
-
-  static toId(s: JSRSpecifier): string {
-    return `jsr:${s.name}${s.version ? `@${s.version}` : ''}`
-  }
-}
-
 export class NPMSpecifier {
   readonly name: string = ''
   readonly path: string = ''
@@ -97,7 +41,7 @@ export class NPMSpecifier {
     })
   }
 
-  constructor(pln: Partial<JSRSpecifier>) {
+  constructor(pln: Partial<NPMSpecifier>) {
     Object.assign(this, pln)
   }
 }

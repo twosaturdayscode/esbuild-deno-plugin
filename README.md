@@ -2,7 +2,13 @@
 [![deno doc](https://jsr.io/badges/@duesabati/esbuild-deno-plugin)](https://jsr.io/@duesabati/esbuild-deno-plugin)
 
 > [!IMPORTANT]
-> This is a fork and rewrite of the original work of [esbuild_deno_loader](https://github.com/lucacasonato/esbuild_deno_loader)
+> This is a fork and rewrite of the original work of [esbuild_deno_loader](https://github.com/lucacasonato/esbuild_deno_loader).
+> I've added features that were missing and refactored the code to be more readable and maintainable.
+>
+> I've also dropped the "portable" use case since it adds a lot of complexity 
+> that I did not fully understand and I think it's better to keep things simple.
+>
+> I may create another plugin that does that in the future but for now I'm focusing on this one.
 
 Deno modules resolution and loading for `esbuild`.
 
@@ -14,7 +20,7 @@ Deno modules resolution and loading for `esbuild`.
 - Support for `npm:` specifiers.
 - Support for `jsr:` specifiers.
 - Support for import maps (including embedded into `deno.json`).
-- Native loader using Deno's global cache directory.
+- Use Deno's global cache directory.
 
 ### Workspaces
 
@@ -82,9 +88,6 @@ This example bundles an entrypoint into a single ESM output.
 
 ```ts
 import * as esbuild from "npm:esbuild@0.23.0";
-// Import the WASM build on platforms where running subprocesses is not
-// permitted, such as Deno Deploy, or when running without `--allow-run`.
-// import * as esbuild from "https://deno.land/x/esbuild@0.20.2/wasm.js";
 
 import { denoPlugins } from "jsr:@duesabati/esbuild-deno-plugin@^0.0.1";
 

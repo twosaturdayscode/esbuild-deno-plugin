@@ -33,19 +33,14 @@ export interface DenoPluginsOptions {
    * If this option is not specified, the deno.json config file is consulted to
    * determine what lock file to use, if any.
    *
-   * A lockfile must be present to resolve `jsr:` specifiers with the `portable`
-   * loader. When using the `native` loader, a lockfile is not required, but to
-   * ensure dependencies are de-duplicated correctly, it is recommended to use a
-   * lockfile.
+   * A lockfile is not required, but to ensure dependencies are de-duplicated
+   * correctly, it is recommended to use a lockfile.
    */
   lockPath?: string
   /**
    * Specify whether to generate and use a local `node_modules` directory when
    * using the `native` loader. This is equivalent to the `--node-modules-dir`
    * flag to the Deno executable.
-   *
-   * This option is ignored when using the `portable` loader, as the portable
-   * loader always uses a local `node_modules` directory.
    */
   nodeModulesDir?: boolean
 }

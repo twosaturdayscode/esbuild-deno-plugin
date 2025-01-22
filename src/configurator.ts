@@ -1,10 +1,5 @@
 import { dirname, join } from '@std/path'
-import { isRunAllowed } from './concepts/deno.ts'
-import {
-  type DenoLoaderOptions,
-  LOADER_TYPES,
-  type LoaderType,
-} from './concepts/loader.ts'
+import type { DenoLoaderOptions } from './concepts/loader.ts'
 
 import { DenoConfig } from './core/deno/config.ts'
 
@@ -13,10 +8,8 @@ export class LoaderPluginConf {
     this.config.useNodeModulesFolder = true
   }
 
-  static async fromOptions(opts: DenoLoaderOptions): Promise<LoaderPluginConf> {
-    const defaultLoader = await LoaderPluginConf.defaultLoader()
-
-    const loader = new LoaderPluginConf(defaultLoader)
+  static fromOptions(opts: DenoLoaderOptions): LoaderPluginConf {
+    const loader = new LoaderPluginConf()
 
     if (opts.configPath) {
       const config = DenoConfig.fromAbsolute(opts.configPath)
@@ -47,22 +40,7 @@ export class LoaderPluginConf {
     return loader
   }
 
-  /**
-   * If the `--allow-run` permission has been granted, this will use the `native`
-   * loader. Otherwise, it will use the `portable` loader.
-   *
-   * @returns The default loader based on the permissions granted to the script.
-   */
-  static async defaultLoader(): Promise<LoaderType> {
-    if (await isRunAllowed()) {
-      return 'native'
-    }
-
-    return 'portable'
-  }
-
   private constructor(
-    private loader: LoaderType,
     private readonly config = {
       useNodeModulesFolder: false,
       configPath: '',
@@ -71,20 +49,8 @@ export class LoaderPluginConf {
     },
   ) {}
 
-  setLoaderType(loaderType: LoaderType): void {
-    this.loader = loaderType
-  }
-
   get isUsingNodeModules(): boolean {
     return this.config.useNodeModulesFolder
-  }
-
-  get isUsingNativeLoader(): boolean {
-    return this.loader === 'native'
-  }
-
-  static isSupported(loader: string): loader is LoaderType {
-    return LOADER_TYPES.includes(loader)
   }
 
   setConfigPath(configPath: string): void {
