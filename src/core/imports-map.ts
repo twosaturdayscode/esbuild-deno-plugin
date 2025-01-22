@@ -24,7 +24,9 @@ export class ImportMap {
    * @param pln A serialized / plain object import map.
    * @returns A new ImportMap instance.
    */
-  load(pln: Partial<PlainImportMap>): ImportMap {
+  load(pln: Partial<PlainImportMap>, opts: { base?: string } = {}): ImportMap {
+    const { base } = opts
+
     if (!ImportMap.isValidMapRecord(pln)) {
       throw new Error('Invalid import map shape.')
     }
@@ -46,11 +48,22 @@ export class ImportMap {
     })
 
     for (const [k, v] of Object.entries(pln.imports)) {
-      this._imports.set(k, v)
+      const resolved_k = base ? resolveUrlLike(k, base) : k
+      const resolved_v = base ? resolveUrlLike(v, base) : v
+
+      this._imports.set(resolved_k, resolved_v)
     }
 
     for (const [k, v] of Object.entries(pln.scopes ?? {})) {
-      this._scopes.set(k, new Map(Object.entries(v)))
+      const resolved_k = base ? resolveUrlLike(k, base) : k
+      const resolved_v = Object.fromEntries(
+        Object.entries(v).map(([k, v]) => [
+          base ? resolveUrlLike(k, base) : k,
+          base ? resolveUrlLike(v, base) : v,
+        ]),
+      )
+
+      this._scopes.set(resolved_k, new Map(Object.entries(resolved_v)))
     }
 
     return this
@@ -131,52 +144,6 @@ export class ImportMap {
     }
 
     this._scopes.set(scope, new Map(Object.entries(scoped)))
-  }
-
-  /**
-   * Resolve the import map with a base URL.
-   *
-   * @param base The base URL to resolve the relative imports.
-   * @returns A new resolved ImportMap instance.
-   */
-  resolveWith(base: string): void {
-    const imports: Imports = Object.fromEntries(
-      Array.from(this._imports).map(([k, v]) => [
-        resolveUrlLike(k, base),
-        resolveUrlLike(v, base),
-      ]),
-    )
-
-    const scopes: Scopes = Object.fromEntries(
-      Array.from(this._scopes).map(([a, scoped]) => {
-        if (!URL.canParse(a, base)) {
-          throw new Error('Invalid scope. At scope: ' + a)
-        }
-
-        const imports = Object.fromEntries(
-          Array.from(scoped).map(([k, v]) => [
-            resolveUrlLike(k, base),
-            resolveUrlLike(v, base),
-          ]),
-        )
-
-        return [a, sortRecord(imports)]
-      }),
-    )
-
-    const sortedImports = sortRecord(imports)
-    const sortedScopes = sortRecord(scopes)
-
-    this._imports.clear()
-    this._scopes.clear()
-
-    for (const [k, v] of Object.entries(sortedImports)) {
-      this._imports.set(k, v)
-    }
-
-    for (const [k, v] of Object.entries(sortedScopes)) {
-      this._scopes.set(k, new Map(Object.entries(v)))
-    }
   }
 
   /**
@@ -354,11 +321,11 @@ function isValidImport(specifier: string, value: string): boolean {
   return !(specifier.endsWith('/') && !value.endsWith('/'))
 }
 
-function sortRecord<T extends { [K: string]: unknown }>(record: T): T {
-  return Object.fromEntries(
-    Object.entries(record).sort(([a], [b]) => a.localeCompare(b)),
-  ) as T
-}
+// function sortRecord<T extends { [K: string]: unknown }>(record: T): T {
+//   return Object.fromEntries(
+//     Object.entries(record).sort(([a], [b]) => a.localeCompare(b)),
+//   ) as T
+// }
 
 // const specialSchemes = ['ftp', 'file', 'http', 'https', 'ws', 'wss']
 

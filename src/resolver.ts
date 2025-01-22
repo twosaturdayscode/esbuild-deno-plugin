@@ -108,8 +108,9 @@ export const denoResolver = (
 
       if (config.imports) {
         map
-          .load({ imports: config.imports, scopes: config.scopes })
-          .resolveWith(toFileUrl(opts.configPath ?? Deno.cwd()).href)
+          .load({ imports: config.imports, scopes: config.scopes }, {
+            base: toFileUrl(opts.configPath ?? Deno.cwd()).href,
+          })
 
         if (expandImports) {
           map.expand()
@@ -131,7 +132,7 @@ export const denoResolver = (
             },
           )
 
-        map.load(fetched).resolveWith(importMapPath.href)
+        map.load(fetched, { base: importMapPath.href })
       }
 
       // If `workspace` is specified, use the workspace to extend the
@@ -180,7 +181,7 @@ export const denoResolver = (
           const memberMap = ImportMap.empty()
 
           if (imports) {
-            memberMap.load({ imports }).resolveWith(location)
+            memberMap.load({ imports }, { base: location })
           }
 
           if (importMap) {
@@ -193,7 +194,7 @@ export const denoResolver = (
                 )
               })
 
-            memberMap.load(fetched).resolveWith(importMapPath.href)
+            memberMap.load(fetched, { base: importMapPath.href })
           }
 
           map.addScope(location, memberMap.imports)
@@ -211,7 +212,7 @@ export const denoResolver = (
           },
         )
 
-      map.load(fetched).resolveWith(opts.importMapURL)
+      map.load(fetched, { base: opts.importMapURL })
     }
 
     b.onResolve({ filter: /.*/ }, async (args) => {
