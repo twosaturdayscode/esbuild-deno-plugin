@@ -159,7 +159,16 @@ export const denoResolver = (
           const { name, exports, imports, importMap } = DenoConfig
             .ofWorkspaceMember(path)
 
+          /**
+           * If `name` or `exports` are missing, it means it's an application
+           * package and not a lib package, therefore we just add to the map
+           * its imports scoped under its path.
+           */
           if (!name || !exports) {
+            if (imports) {
+              map.addScope(toFileUrl(path + '/').href, imports)
+            }
+
             continue
           }
 
