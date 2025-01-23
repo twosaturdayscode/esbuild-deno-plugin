@@ -92,13 +92,10 @@ export const denoLoader = (opts: DenoLoaderOptions = {}): Plugin => ({
          * If we are using the node_modules directory, we don't need to do anything.
          * We just let esbuild handle it.
          */
-        if (cnf.isUsingNodeModules) {
-          return undefined
-        }
+        if (cnf.isUsingNodeModules) return undefined
 
         /**
-         * Using the native loader, if it's a relative path, we just let
-         * esbuild handle it.
+         * If it's a relative path, we just let esbuild handle it.
          */
         if (args.path.startsWith('.')) return undefined
 
