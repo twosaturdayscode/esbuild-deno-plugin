@@ -153,36 +153,45 @@ export class ImportMap {
    * @returns A new ImportMap instance with all the imports expanded.
    */
   expand() {
-    const result: [string, string][] = []
-
     for (const [k, v] of Array.from(this._imports)) {
-      result.push([k, v])
+      if (!this._imports.has(k + '/')) {
+        const expanded = this.expand_specifier(k, v)
 
-      if (
-        !k.endsWith('/') &&
-        !this._imports.has(k + '/') &&
-        (v.startsWith('jsr:') || v.startsWith('npm:'))
-      ) {
-        const newKey = k + '/'
-        /**
-         * @todo Check wtf is going on here.
-         */
-        const newValue = v.slice(0, 4) + '/' + v.slice(v[4] === '/' ? 5 : 4) +
-          '/'
-
-        result.push([newKey, newValue])
+        this._imports.set(...expanded)
       }
     }
 
-    const expanded = Object.fromEntries(result)
+    for (const [_, scopedImports] of Array.from(this._scopes)) {
+      for (const [k, v] of Array.from(scopedImports)) {
+        if (!scopedImports.has(k + '/')) {
+          const expanded = this.expand_specifier(k, v)
 
-    this._imports.clear()
-
-    for (const [k, v] of Object.entries(expanded)) {
-      this._imports.set(k, v)
+          scopedImports.set(...expanded)
+        }
+      }
     }
 
     return this
+  }
+
+  private expand_specifier(specifier: string, value: string) {
+    if (
+      !specifier.endsWith('/') &&
+      (value.startsWith('jsr:') || value.startsWith('npm:'))
+    ) {
+      const expanded_key = specifier + '/'
+
+      /**
+       * This does: jsr: -> jsr:/ and npm: -> npm:/
+       */
+      const expanded_value = `${value.slice(0, 4)}/${
+        value.slice(value[4] === '/' ? 5 : 4)
+      }/`
+
+      return [expanded_key, expanded_value] as const
+    }
+
+    return [specifier, value] as const
   }
 
   /**
