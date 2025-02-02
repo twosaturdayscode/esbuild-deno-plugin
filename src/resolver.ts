@@ -1,4 +1,4 @@
-import { dirname, resolve, toFileUrl, join } from '@std/path'
+import { dirname, join, resolve, toFileUrl } from '@std/path'
 import { existsSync } from '@std/fs'
 
 import type { Plugin } from './concepts/esbuild.ts'
