@@ -1,4 +1,4 @@
-import { dirname, resolve, toFileUrl } from '@std/path'
+import { dirname, resolve, toFileUrl, join } from '@std/path'
 import { existsSync } from '@std/fs'
 
 import type { Plugin } from './concepts/esbuild.ts'
@@ -168,8 +168,20 @@ export const denoResolver = (
             continue
           }
 
-          const mod = toFileUrl(resolve(path, exports)).href
-          map.addImport(name, mod)
+          /**
+           * @todo Get rid of this if else block.
+           */
+          if (typeof exports === 'string') {
+            const mod = toFileUrl(resolve(path, exports)).href
+
+            map.addImport(name, mod)
+          } else {
+            for (const [k, v] of Object.entries(exports)) {
+              map.addImport(join(name, k), toFileUrl(resolve(path, v)).href)
+            }
+          }
+
+          if (name.startsWith('@ritaj')) console.log(map.imports)
 
           const location = toFileUrl(path + '/').href
 

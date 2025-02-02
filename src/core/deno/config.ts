@@ -15,7 +15,7 @@ interface DenoConfigs {
 
 type WorkspaceMemberConfig = {
   name?: string
-  exports?: string
+  exports?: string | Record<string, string>
   version?: string
   imports?: Imports
   importMap?: string
@@ -54,14 +54,8 @@ export class DenoConfig {
       result['version'] = parsed.version
     }
 
-    if (typeof parsed.exports === 'string') {
-      result['exports'] = parsed.exports
-    }
-
-    if (isRecord(parsed.exports)) {
-      const exports = parsed.exports['.'] as string
-
-      result['exports'] = exports
+    if (typeof parsed.exports === 'string' || isRecord(parsed.exports)) {
+      result['exports'] = parsed.exports as string | Record<string, string>
     }
 
     if (isRecord(parsed.imports)) {
