@@ -1,0 +1,120 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/assert@1.0.2": "1.0.2",
+    "jsr:@std/assert@^1.0.2": "1.0.2",
+    "jsr:@std/assert@~0.213.1": "0.213.1",
+    "jsr:@std/async@^1.0.2": "1.0.10",
+    "jsr:@std/data-structures@^1.0.1": "1.0.6",
+    "jsr:@std/encoding@1.0.1": "1.0.1",
+    "jsr:@std/fs@*": "1.0.11",
+    "jsr:@std/fs@^1.0.1": "1.0.11",
+    "jsr:@std/internal@^1.0.1": "1.0.5",
+    "jsr:@std/json@1": "1.0.1",
+    "jsr:@std/jsonc@1.0.0": "1.0.0",
+    "jsr:@std/path@0.213": "0.213.1",
+    "jsr:@std/path@1.0.2": "1.0.2",
+    "jsr:@std/path@^1.0.2": "1.0.8",
+    "jsr:@std/path@^1.0.8": "1.0.8",
+    "jsr:@std/testing@1.0.0": "1.0.0",
+    "npm:immer@10.1.1": "10.1.1",
+    "npm:preact-render-to-string@*": "6.5.13_preact@10.25.4",
+    "npm:preact@*": "10.25.4",
+    "npm:react@*": "19.0.0"
+  },
+  "jsr": {
+    "@std/assert@0.213.1": {
+      "integrity": "24c28178b30c8e0782c18e8e94ea72b16282207569cdd10ffb9d1d26f2edebfe"
+    },
+    "@std/assert@1.0.2": {
+      "integrity": "ccacec332958126deaceb5c63ff8b4eaf9f5ed0eac9feccf124110435e59e49c",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/async@1.0.10": {
+      "integrity": "2ff1b1c7d33d1416159989b0f69e59ec7ee8cb58510df01e454def2108b3dbec"
+    },
+    "@std/data-structures@1.0.6": {
+      "integrity": "76a7fd8080c66604c0496220a791860492ab21a04a63a969c0b9a0609bbbb760"
+    },
+    "@std/encoding@1.0.1": {
+      "integrity": "5955c6c542ebb4ce6587c3b548dc71e07a6c27614f1976d1d3887b1196cf4e65"
+    },
+    "@std/fs@1.0.11": {
+      "integrity": "ba674672693340c5ebdd018b4fe1af46cb08741f42b4c538154e97d217b55bdd",
+      "dependencies": [
+        "jsr:@std/path@^1.0.8"
+      ]
+    },
+    "@std/internal@1.0.5": {
+      "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
+    },
+    "@std/json@1.0.1": {
+      "integrity": "1f0f70737e8827f9acca086282e903677bc1bb0c8ffcd1f21bca60039563049f"
+    },
+    "@std/jsonc@1.0.0": {
+      "integrity": "835da212e586f3ef94ab25e8f0e8a7711a86fddbee95ad40c34d6b3d74da1a1b",
+      "dependencies": [
+        "jsr:@std/json"
+      ]
+    },
+    "@std/path@0.213.1": {
+      "integrity": "f187bf278a172752e02fcbacf6bd78a335ed320d080a7ed3a5a59c3e88abc673",
+      "dependencies": [
+        "jsr:@std/assert@~0.213.1"
+      ]
+    },
+    "@std/path@1.0.2": {
+      "integrity": "a452174603f8c620bd278a380c596437a9eef50c891c64b85812f735245d9ec7"
+    },
+    "@std/path@1.0.8": {
+      "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
+    },
+    "@std/testing@1.0.0": {
+      "integrity": "27cfc06392c69c2acffe54e6d0bcb5f961cf193f519255372bd4fff1481bfef8",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.2",
+        "jsr:@std/async",
+        "jsr:@std/data-structures",
+        "jsr:@std/fs@^1.0.1",
+        "jsr:@std/internal",
+        "jsr:@std/path@^1.0.2"
+      ]
+    }
+  },
+  "npm": {
+    "immer@10.1.1": {
+      "integrity": "sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw=="
+    },
+    "preact-render-to-string@6.5.13_preact@10.25.4": {
+      "integrity": "sha512-iGPd+hKPMFKsfpR2vL4kJ6ZPcFIoWZEcBf0Dpm3zOpdVvj77aY8RlLiQji5OMrngEyaxGogeakTb54uS2FvA6w==",
+      "dependencies": [
+        "preact"
+      ]
+    },
+    "preact@10.25.4": {
+      "integrity": "sha512-jLdZDb+Q+odkHJ+MpW/9U5cODzqnB+fy2EiHSZES7ldV5LK7yjlVzTp7R8Xy6W6y75kfK8iWYtFVH7lvjwrCMA=="
+    },
+    "react@19.0.0": {
+      "integrity": "sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ=="
+    }
+  },
+  "remote": {
+    "https://deno.land/x/denoflate@1.2.1/mod.ts": "f5628e44b80b3d80ed525afa2ba0f12408e3849db817d47a883b801f9ce69dd6",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate.js": "b9f9ad9457d3f12f28b1fb35c555f57443427f74decb403113d67364e4f2caf4",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate_bg.wasm.js": "d581956245407a2115a3d7e8d85a9641c032940a8e810acbd59ca86afd34d44d",
+    "https://deno.land/x/esbuild@v0.23.0/mod.js": "46f2e569b50e4d1f1b379b2f9785a9b9437d52911b849df8797d9ca40ce3e1c9"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@1.0.2",
+      "jsr:@std/encoding@1.0.1",
+      "jsr:@std/fs@*",
+      "jsr:@std/jsonc@1.0.0",
+      "jsr:@std/path@1.0.2",
+      "jsr:@std/testing@1.0.0",
+      "npm:immer@10.1.1"
+    ]
+  }
+}

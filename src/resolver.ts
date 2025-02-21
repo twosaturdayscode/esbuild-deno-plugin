@@ -98,7 +98,7 @@ export const denoResolver = (
      *
      * @note Remember that that order is expected.
      */
-    const map = ImportMap.empty()
+    let map = ImportMap.empty()
 
     /**
      * From deno config file (deno.json/c).     *
@@ -107,7 +107,7 @@ export const denoResolver = (
       const config = DenoConfig.fromAbsolute(opts.configPath)
 
       if (config.imports) {
-        map
+        map = map
           .load({ imports: config.imports, scopes: config.scopes }, {
             base: toFileUrl(opts.configPath ?? Deno.cwd()).href,
           })
@@ -128,7 +128,7 @@ export const denoResolver = (
             },
           )
 
-        map.load(fetched, { base: importMapPath.href })
+        map = map.load(fetched, { base: importMapPath.href })
       }
 
       // If `workspace` is specified, use the workspace to extend the
@@ -162,7 +162,7 @@ export const denoResolver = (
            */
           if (!name || !exports) {
             if (imports) {
-              map.addScope(toFileUrl(path + '/').href, imports)
+              map = map.addScope(toFileUrl(path + '/').href, imports)
             }
 
             continue
@@ -174,14 +174,15 @@ export const denoResolver = (
           if (typeof exports === 'string') {
             const mod = toFileUrl(resolve(path, exports)).href
 
-            map.addImport(name, mod)
+            map = map.addImport(name, mod)
           } else {
             for (const [k, v] of Object.entries(exports)) {
-              map.addImport(join(name, k), toFileUrl(resolve(path, v)).href)
+              map = map.addImport(
+                join(name, k),
+                toFileUrl(resolve(path, v)).href,
+              )
             }
           }
-
-          if (name.startsWith('@ritaj')) console.log(map.imports)
 
           const location = toFileUrl(path + '/').href
 
@@ -197,10 +198,10 @@ export const denoResolver = (
            *
            * We create an import map for each workspace member.
            */
-          const memberMap = ImportMap.empty()
+          let memberMap = ImportMap.empty()
 
           if (imports) {
-            memberMap.load({ imports }, { base: location })
+            memberMap = memberMap.load({ imports }, { base: location })
           }
 
           // if (scopes) {
@@ -217,14 +218,14 @@ export const denoResolver = (
                 )
               })
 
-            memberMap.load(fetched, { base: importMapPath.href })
+            memberMap = memberMap.load(fetched, { base: importMapPath.href })
           }
 
           /**
            * Finally, we load the member map into the root map as scoped
            * imports.
            */
-          map.addScope(location, memberMap.imports)
+          map = map.addScope(location, Object.fromEntries(memberMap.imports))
         }
       }
     }
@@ -239,11 +240,11 @@ export const denoResolver = (
           },
         )
 
-      map.load(fetched, { base: opts.importMapURL })
+      map = map.load(fetched, { base: opts.importMapURL })
     }
 
     if (expandImports) {
-      map.expand()
+      map = map.expand()
     }
 
     /**

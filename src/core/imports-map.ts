@@ -1,12 +1,20 @@
+import { enableMapSet, immerable, produce } from 'immer'
+
 import { isStringRecord } from '../validations/is-string-record.ts'
 import { isRecord } from '../validations/is-any-record.ts'
-import type { Imports, PlainImportMap, Scopes } from '../concepts/deno.ts'
+import type {
+  Imports,
+  ImportsRecord,
+  PlainImportMap,
+  Scopes,
+  ScopesRecord,
+} from '../concepts/deno.ts'
 import { resolveUrlLike } from './urls-like.ts'
 
-export class ImportMap {
-  private readonly _imports = new Map<string, string>()
-  private readonly _scopes = new Map<string, Map<string, string>>()
+enableMapSet()
 
+export class ImportMap {
+  [immerable] = true
   /**
    * @returns An empty ImportMap.
    */
@@ -14,9 +22,10 @@ export class ImportMap {
     return new ImportMap()
   }
 
-  private constructor(private readonly pln: Partial<PlainImportMap> = {}) {
-    return Object.assign(this, this.pln)
-  }
+  private constructor(
+    readonly imports: Imports = new Map(),
+    readonly scopes: Scopes = new Map(),
+  ) {}
 
   /**
    * Allows to create a new ImportMap instance from a plain object.
@@ -47,26 +56,26 @@ export class ImportMap {
       }
     })
 
-    for (const [k, v] of Object.entries(pln.imports)) {
-      const resolved_k = base ? resolveUrlLike(k, base) : k
-      const resolved_v = base ? resolveUrlLike(v, base) : v
+    return produce(this, (draft) => {
+      for (const [k, v] of Object.entries(pln.imports)) {
+        const resolved_k = base ? resolveUrlLike(k, base) : k
+        const resolved_v = base ? resolveUrlLike(v, base) : v
 
-      this._imports.set(resolved_k, resolved_v)
-    }
+        draft.imports.set(resolved_k, resolved_v)
+      }
 
-    for (const [k, v] of Object.entries(pln.scopes ?? {})) {
-      const resolved_k = base ? resolveUrlLike(k, base) : k
-      const resolved_v = Object.fromEntries(
-        Object.entries(v).map(([k, v]) => [
-          base ? resolveUrlLike(k, base) : k,
-          base ? resolveUrlLike(v, base) : v,
-        ]),
-      )
+      for (const [k, v] of Object.entries(pln.scopes ?? {})) {
+        const resolved_k = base ? resolveUrlLike(k, base) : k
+        const resolved_v = new Map(
+          Object.entries(v).map(([k, v]) => [
+            base ? resolveUrlLike(k, base) : k,
+            base ? resolveUrlLike(v, base) : v,
+          ]),
+        )
 
-      this._scopes.set(resolved_k, new Map(Object.entries(resolved_v)))
-    }
-
-    return this
+        draft.scopes.set(resolved_k, resolved_v)
+      }
+    })
   }
 
   /**
@@ -75,7 +84,7 @@ export class ImportMap {
    * @param specifier The import specifier.
    * @param path The import value.
    */
-  addImport(specifier: string, path: string): void {
+  addImport(specifier: string, path: string) {
     if (!isValidImportSpecifier(specifier)) {
       throw new Error(`Invalid import specifier. At import: ${specifier}`)
     }
@@ -90,7 +99,9 @@ export class ImportMap {
       )
     }
 
-    this._imports.set(specifier, path)
+    return produce(this, (draft) => {
+      draft.imports.set(specifier, path)
+    })
   }
 
   /**
@@ -103,7 +114,7 @@ export class ImportMap {
    * @param scope The scope specifier.
    * @param scoped The scoped imports.
    */
-  addScope(scope: string, scoped: Imports): void {
+  addScope(scope: string, scoped: ImportsRecord) {
     if (!URL.canParse(scope)) {
       throw new Error(`Invalid scope specifier. At scope: ${scope}`)
     }
@@ -132,18 +143,20 @@ export class ImportMap {
       }
     }
 
-    const current = this._scopes.get(scope)
+    return produce(this, (draft) => {
+      const current = draft.scopes.get(scope)
 
-    if (current) {
-      for (const [k, v] of Object.entries(scoped)) {
-        current.set(k, v)
+      if (current) {
+        for (const [k, v] of Object.entries(scoped)) {
+          current.set(k, v)
+        }
+
+        draft.scopes.set(scope, current)
+        return
       }
 
-      this._scopes.set(scope, current)
-      return
-    }
-
-    this._scopes.set(scope, new Map(Object.entries(scoped)))
+      draft.scopes.set(scope, new Map(Object.entries(scoped)))
+    })
   }
 
   /**
@@ -153,25 +166,25 @@ export class ImportMap {
    * @returns A new ImportMap instance with all the imports expanded.
    */
   expand() {
-    for (const [k, v] of Array.from(this._imports)) {
-      if (!this._imports.has(k + '/')) {
-        const expanded = this.expand_specifier(k, v)
-
-        this._imports.set(...expanded)
-      }
-    }
-
-    for (const [_, scopedImports] of Array.from(this._scopes)) {
-      for (const [k, v] of Array.from(scopedImports)) {
-        if (!scopedImports.has(k + '/')) {
+    return produce(this, (draft) => {
+      for (const [k, v] of Array.from(draft.imports)) {
+        if (!draft.imports.has(k + '/')) {
           const expanded = this.expand_specifier(k, v)
 
-          scopedImports.set(...expanded)
+          draft.imports.set(...expanded)
         }
       }
-    }
 
-    return this
+      for (const [_, scopedImports] of Array.from(draft.scopes)) {
+        for (const [k, v] of Array.from(scopedImports)) {
+          if (!scopedImports.has(k + '/')) {
+            const expanded = this.expand_specifier(k, v)
+
+            scopedImports.set(...expanded)
+          }
+        }
+      }
+    })
   }
 
   private expand_specifier(specifier: string, value: string) {
@@ -206,14 +219,14 @@ export class ImportMap {
 
     const resolved = resolveUrlLike(specifier, referrer)
 
-    const resolvedImport = this.findImportValue(resolved, this._imports)
+    const resolvedImport = this.findImportValue(resolved, this.imports)
 
     if (resolvedImport) return resolvedImport
 
     /**
      * Check in the scopes
      */
-    for (const [scope, scopedImports] of Array.from(this._scopes)) {
+    for (const [scope, scopedImports] of Array.from(this.scopes)) {
       if (
         scope === referrer ||
         (scope.endsWith('/') && referrer.startsWith(scope))
@@ -272,25 +285,15 @@ export class ImportMap {
    * @param scope The scope key to check.
    */
   hasScope(scope: string): boolean {
-    return this._scopes.has(scope)
+    return this.scopes.has(scope)
   }
 
   get isEmpty() {
-    return this._imports.size === 0 && this._scopes.size === 0
+    return this.imports.size === 0 && this.scopes.size === 0
   }
 
   get hasEmptyImports() {
-    return this._imports.size === 0
-  }
-
-  get imports(): Imports {
-    return Object.fromEntries(this._imports)
-  }
-
-  get scopes(): Scopes {
-    return Object.fromEntries(
-      Array.from(this._scopes).map(([a, b]) => [a, Object.fromEntries(b)]),
-    )
+    return this.imports.size === 0
   }
 
   /**
@@ -299,8 +302,8 @@ export class ImportMap {
    * @returns A boolean indicating if the object is a valid import map.
    */
   static isValidMapRecord(map: unknown): map is {
-    imports: Imports
-    scopes?: Scopes
+    imports: ImportsRecord
+    scopes?: ScopesRecord
   } {
     if (!isRecord(map)) {
       return false

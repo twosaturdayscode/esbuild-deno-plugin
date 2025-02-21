@@ -1,18 +1,21 @@
 import { extname } from '@std/path'
 import type { Loader } from './esbuild.ts'
 
-export interface Imports {
+export interface ImportsRecord {
   [url: string]: string
 }
 
-export interface Scopes {
-  [url: string]: Imports
+export interface ScopesRecord {
+  [url: string]: ImportsRecord
 }
 
 export type PlainImportMap = {
-  imports: Imports
-  scopes: Scopes
+  imports: ImportsRecord
+  scopes: ScopesRecord
 }
+
+export type Imports = Map<string, string>
+export type Scopes = Map<string, Imports>
 
 export async function isRunAllowed() {
   return await Deno.permissions.query({ name: 'run' }).then((s) =>

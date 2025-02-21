@@ -3,11 +3,11 @@ import * as JSONC from '@std/jsonc'
 
 import { isRecord } from '../../validations/is-any-record.ts'
 
-import type { Imports, Scopes } from '../../concepts/deno.ts'
+import type { ImportsRecord, ScopesRecord } from '../../concepts/deno.ts'
 
 interface DenoConfigs {
-  imports?: Imports
-  scopes?: Scopes
+  imports?: ImportsRecord
+  scopes?: ScopesRecord
   importMap?: string
   workspace?: string[]
   lock?: boolean | string
@@ -17,7 +17,7 @@ type WorkspaceMemberConfig = {
   name?: string
   exports?: string | Record<string, string>
   version?: string
-  imports?: Imports
+  imports?: ImportsRecord
   importMap?: string
 }
 
@@ -59,7 +59,7 @@ export class DenoConfig {
     }
 
     if (isRecord(parsed.imports)) {
-      result['imports'] = parsed.imports as Imports
+      result['imports'] = parsed.imports as ImportsRecord
     }
 
     if (typeof parsed.importMap === 'string') {
