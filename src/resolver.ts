@@ -264,10 +264,6 @@ export const denoResolver = (opts: DenoResolverOptions = {}): Plugin => ({
        * What does it mean to have an empty importer?
        */
       if (args.importer === '') {
-        if (args.namespace === '') {
-          throw new Error('[assert] namespace is empty.')
-        }
-
         const referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
 
         const resolved = map.resolveModule(args.path, referrer.href)
@@ -277,6 +273,10 @@ export const denoResolver = (opts: DenoResolverOptions = {}): Plugin => ({
         const { path, namespace } = urlToEsbuildResolution(new URL(resolved))
 
         return await b.resolve(path, { namespace, kind: args.kind })
+      }
+
+      if (args.namespace === '') {
+        throw new Error('[assert] namespace is empty.')
       }
 
       const referrer = new URL(`${args.namespace}:${args.importer}`)
