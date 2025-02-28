@@ -20,7 +20,8 @@ export interface DenoResolverOptions {
    * Specify the path to a root deno.json config file to use. This is equivalent to
    * the `--config` flag to the Deno executable. This path must be absolute.
    *
-   * If this option is not specified, the plugin will look the root deno.json file in
+   * If this option is not specified, the plugin will look the root deno.json
+   * file in the current working directory.
    */
   configPath?: string
   /**
@@ -71,9 +72,7 @@ export interface DenoResolverOptions {
  * If using the {@link denoLoader}, this plugin must be used before the
  * loader plugin.
  */
-export const denoResolver = (
-  opts: DenoResolverOptions = { expandImports: true },
-): Plugin => ({
+export const denoResolver = (opts: DenoResolverOptions = {}): Plugin => ({
   name: PLUGIN_NAME,
   /**
    * The setup of this plugin consists in having a usable "ImportMap" object
@@ -81,6 +80,9 @@ export const denoResolver = (
    */
   setup: async (b) => {
     const { expandImports = true } = opts
+
+    const config_path = opts.configPath ?? DenoConfig.findPath(Deno.cwd())
+    const config = DenoConfig.fromAbsolute(config_path)
 
     const externals = Externals.fromOptions(b.initialOptions.external ?? [])
 
@@ -103,130 +105,126 @@ export const denoResolver = (
     /**
      * From deno config file (deno.json/c).     *
      */
-    if (opts.configPath) {
-      const config = DenoConfig.fromAbsolute(opts.configPath)
 
-      if (config.imports) {
-        map = map
-          .load({ imports: config.imports, scopes: config.scopes }, {
-            base: toFileUrl(opts.configPath ?? Deno.cwd()).href,
-          })
-      }
+    if (config.imports) {
+      map = map
+        .load({ imports: config.imports, scopes: config.scopes }, {
+          base: toFileUrl(opts.configPath ?? Deno.cwd()).href,
+        })
+    }
 
-      if (config.importMap) {
-        const importMapPath = new URL(
-          config.importMap,
-          toFileUrl(opts.configPath),
+    if (config.importMap) {
+      const import_map_path = new URL(config.importMap, toFileUrl(config_path))
+
+      const fetched = await fetch(import_map_path)
+        .then((r) => r.json())
+        .catch(
+          (e) => {
+            throw Error(
+              `Failed to fetch import map at ${import_map_path} due to: ${e}`,
+            )
+          },
         )
 
-        const fetched = await fetch(importMapPath).then((r) => r.json())
-          .catch(
-            (e) => {
-              throw Error(
-                `Failed to fetch import map at ${importMapPath} due to: ${e}`,
-              )
-            },
-          )
+      map = map.load(fetched, { base: import_map_path.href })
+    }
 
-        map = map.load(fetched, { base: importMapPath.href })
-      }
+    // If `workspace` is specified, use the workspace to extend the
+    // import map.
+    if (Array.isArray(config.workspace) && config.workspace.length > 0) {
+      const root = dirname(config_path)
 
-      // If `workspace` is specified, use the workspace to extend the
-      // import map.
-      if (Array.isArray(config.workspace) && config.workspace.length > 0) {
-        const root = dirname(opts.configPath)
+      /**
+       * Retrieve all the workspace members paths.
+       */
+      const workspace_members = config.workspace.map((path) => {
+        if (is_glob(path)) {
+          const glob = resolve(root, get_root_of(path))
 
-        const workspace_members = config.workspace.map((path) => {
-          if (is_glob(path)) {
-            const glob = resolve(root, get_root_of(path))
+          const members = Array.from(Deno.readDirSync(glob))
+            .filter((e) => e.isDirectory)
+            .map((e) => resolve(glob, e.name))
+            .filter(is_deno_project)
 
-            const members = Array.from(Deno.readDirSync(glob))
-              .filter((e) => e.isDirectory)
-              .map((e) => resolve(glob, e.name))
-              .filter(is_deno_project)
-
-            return members
-          }
-
-          return resolve(root, path)
-        }).flat()
-
-        for (const path of workspace_members) {
-          const { name, exports, imports, importMap } = DenoConfig
-            .ofWorkspaceMember(path)
-
-          /**
-           * If `name` or `exports` are missing, it means it's an application
-           * package and not a lib package, therefore we just add to the map
-           * its imports scoped under its path.
-           */
-          if (!name || !exports) {
-            if (imports) {
-              map = map.addScope(toFileUrl(path + '/').href, imports)
-            }
-
-            continue
-          }
-
-          /**
-           * @todo Get rid of this if else block.
-           */
-          if (typeof exports === 'string') {
-            const mod = toFileUrl(resolve(path, exports)).href
-
-            map = map.addImport(name, mod)
-          } else {
-            for (const [k, v] of Object.entries(exports)) {
-              map = map.addImport(
-                join(name, k),
-                toFileUrl(resolve(path, v)).href,
-              )
-            }
-          }
-
-          const location = toFileUrl(path + '/').href
-
-          /**
-           * If the user has already defined a scope for this location,
-           * their configuration takes precedence, we should not override it.
-           */
-          if (map.hasScope(location)) continue
-
-          /**
-           * The user has not defined a scope for this location, we can
-           * use the imports map of the member to resolve its imports.
-           *
-           * We create an import map for each workspace member.
-           */
-          let memberMap = ImportMap.empty()
-
-          if (imports) {
-            memberMap = memberMap.load({ imports }, { base: location })
-          }
-
-          // if (scopes) {
-          //   memberMap.load({ scopes }, { base: location })
-          // }
-
-          if (importMap) {
-            const importMapPath = new URL(importMap, toFileUrl(path))
-
-            const fetched = await fetch(importMapPath).then((r) => r.json())
-              .catch((e) => {
-                throw Error(
-                  `Failed to fetch import map at ${importMapPath} of workspace member ${name} due to: ${e}`,
-                )
-              })
-
-            memberMap = memberMap.load(fetched, { base: importMapPath.href })
-          }
-
-          /**
-           * Finally, we load the member map into the root map as scoped
-           * imports.
-           */
-          map = map.addScope(location, Object.fromEntries(memberMap.imports))
+          return members
         }
+
+        return resolve(root, path)
+      }).flat()
+
+      for (const path of workspace_members) {
+        const { name, exports, imports, importMap } = DenoConfig
+          .ofWorkspaceMember(path)
+
+        /**
+         * If `name` or `exports` are missing, it means it's an application
+         * package and not a lib package, therefore we just add to the map
+         * its imports scoped under its path.
+         */
+        if (!name || !exports) {
+          if (imports) map = map.addScope(toFileUrl(path + '/').href, imports)
+
+          continue
+        }
+
+        /**
+         * @todo Get rid of this if else block.
+         */
+        if (typeof exports === 'string') {
+          const mod = toFileUrl(resolve(path, exports)).href
+
+          map = map.addImport(name, mod)
+        } else {
+          for (const [k, v] of Object.entries(exports)) {
+            map = map.addImport(
+              join(name, k),
+              toFileUrl(resolve(path, v)).href,
+            )
+          }
+        }
+
+        const location = toFileUrl(path + '/').href
+
+        /**
+         * If the user has already defined a scope for this location,
+         * their configuration takes precedence, we should not override it.
+         */
+        if (map.hasScope(location)) continue
+
+        /**
+         * The user has not defined a scope for this location, we can
+         * use the imports map of the member to resolve its imports.
+         *
+         * We create an import map for each workspace member.
+         */
+        let memberMap = ImportMap.empty()
+
+        if (imports) {
+          memberMap = memberMap.load({ imports }, { base: location })
+        }
+
+        // if (scopes) {
+        //   memberMap.load({ scopes }, { base: location })
+        // }
+
+        if (importMap) {
+          const importMapPath = new URL(importMap, toFileUrl(path))
+
+          const fetched = await fetch(importMapPath).then((r) => r.json())
+            .catch((e) => {
+              throw Error(
+                `Failed to fetch import map at ${importMapPath} of workspace member ${name} due to: ${e}`,
+              )
+            })
+
+          memberMap = memberMap.load(fetched, { base: importMapPath.href })
+        }
+
+        /**
+         * Finally, we load the member map into the root map as scoped
+         * imports.
+         */
+        map = map.addScope(location, Object.fromEntries(memberMap.imports))
       }
     }
 
@@ -262,31 +260,30 @@ export const denoResolver = (
        */
       if (args.importer === '' && args.resolveDir === '') return undefined
 
-      if (args.importer !== '') {
+      /**
+       * What does it mean to have an empty importer?
+       */
+      if (args.importer === '') {
         if (args.namespace === '') {
           throw new Error('[assert] namespace is empty.')
         }
 
-        const referrer = new URL(`${args.namespace}:${args.importer}`)
+        const referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
 
         const resolved = map.resolveModule(args.path, referrer.href)
 
-        if (externals.has(resolved)) {
-          return { path: resolved, external: true }
-        }
+        if (externals.has(resolved)) return { path: resolved, external: true }
 
         const { path, namespace } = urlToEsbuildResolution(new URL(resolved))
 
         return await b.resolve(path, { namespace, kind: args.kind })
       }
 
-      const referrer = new URL(`${toFileUrl(args.resolveDir).href}/`)
+      const referrer = new URL(`${args.namespace}:${args.importer}`)
 
       const resolved = map.resolveModule(args.path, referrer.href)
 
-      if (externals.has(resolved)) {
-        return { path: resolved, external: true }
-      }
+      if (externals.has(resolved)) return { path: resolved, external: true }
 
       const { path, namespace } = urlToEsbuildResolution(new URL(resolved))
 

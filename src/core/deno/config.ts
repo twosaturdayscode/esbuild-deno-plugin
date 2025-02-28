@@ -35,7 +35,7 @@ export class DenoConfig {
   }
 
   static ofWorkspaceMember(path: string): WorkspaceMemberConfig {
-    const confPath = DenoConfig.find(path)
+    const confPath = DenoConfig.findPath(path)
     const c = Deno.readTextFileSync(confPath)
 
     const parsed = JSONC.parse(c)
@@ -69,9 +69,9 @@ export class DenoConfig {
     return result
   }
 
-  static find(path: string): string {
-    const json = path + '/deno.json'
-    const jsonc = path + '/deno.jsonc'
+  static findPath(root: string): string {
+    const json = root + '/deno.json'
+    const jsonc = root + '/deno.jsonc'
 
     if (existsSync(json)) {
       return json
@@ -81,6 +81,6 @@ export class DenoConfig {
       return jsonc
     }
 
-    throw new Error(`Could not find a Deno config file at: ${path}`)
+    throw new Error(`Could not find a Deno config file at: ${root}`)
   }
 }

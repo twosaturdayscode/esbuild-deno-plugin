@@ -31,6 +31,8 @@ export class ImportMap {
    * Allows to create a new ImportMap instance from a plain object.
    *
    * @param pln A serialized / plain object import map.
+   * @param opts Options to customize the loading.
+   * @param opts.base The base URL to resolve relative URLs.
    * @returns A new ImportMap instance.
    */
   load(pln: Partial<PlainImportMap>, opts: { base?: string } = {}): ImportMap {
