@@ -1,6 +1,6 @@
 {
   "name": "@duesabati/esbuild-deno-plugin",
-  "version": "0.2.0",
+  "version": "0.2.7",
   "exports": {
     ".": "./mod.ts"
   },
